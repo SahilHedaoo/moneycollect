@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert} from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert,ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { Picker } from '@react-native-picker/picker';
+import AppBar from '../components/AppBar';
+import { useRoute } from '@react-navigation/native';
 
 const AddUserScreen = () => {
   const [name, setName] = useState('');
@@ -10,6 +12,11 @@ const AddUserScreen = () => {
   const [location, setLocation] = useState('');
   const [shopName, setShopName] = useState('');
   const [frequency, setFrequency] = useState('daily');
+
+  const [bank, setBank] = useState(null);
+    const route = useRoute();
+
+    
 
   const handleAddUser = async () => {
     if (!name || !phone || !location || !shopName || !frequency) {
@@ -40,8 +47,8 @@ const AddUserScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add Customer</Text>
-
+      <AppBar title='Add User' route={route.name} />
+      <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
       <TextInput
         style={styles.input}
         placeholder="Name"
@@ -83,12 +90,13 @@ const AddUserScreen = () => {
       </Picker>
 
       <Button title="Add Customer" onPress={handleAddUser} />
+    </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1},
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
   input: {
     borderWidth: 1,
@@ -101,6 +109,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 5,
   },
+  subcontainer:{ flexGrow: 1, padding:20, backgroundColor: '#fff' },
 });
 
 export default AddUserScreen;

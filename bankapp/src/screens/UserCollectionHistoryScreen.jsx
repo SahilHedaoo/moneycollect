@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Button, View, Text, StyleSheet, FlatList, ActivityIndicator, Alert,
+  Button, View, Text, StyleSheet, FlatList, ActivityIndicator, Alert, ScrollView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AppBar from '../components/AppBar';
 
 const UserCollectionHistoryScreen = ({ route }) => {
   const { userId, userName } = route.params;
@@ -72,6 +73,9 @@ const UserCollectionHistoryScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
+      
+      <AppBar title='User Collection' route={route.name} />
+       <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
       <Text style={styles.title}>{userName}'s Collection History</Text>
 
       {/* Date Filter Section */}
@@ -122,19 +126,23 @@ const UserCollectionHistoryScreen = ({ route }) => {
         <>
           <Text style={styles.total}>Total Collected: ₹{totalAmount}</Text>
 
-          <FlatList
-            data={collections}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderItem}
-          />
+          {collections.map((item) => (
+  <View key={item.id} style={styles.item}>
+    <Text style={styles.amount}>₹{item.amount}</Text>
+    <Text>{item.frequency.toUpperCase()}</Text>
+    <Text>{new Date(item.collected_at).toLocaleString()}</Text>
+  </View>
+))}
+
         </>
       )}
+    </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1},
   title: { fontSize: 22, fontWeight: 'bold', marginBottom: 15 },
   filterRow: {
     marginBottom: 16,
@@ -160,6 +168,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     color: 'green',
   },
+  subcontainer:{ flexGrow: 1, padding:20, backgroundColor: '#fff' },
 });
 
 export default UserCollectionHistoryScreen;

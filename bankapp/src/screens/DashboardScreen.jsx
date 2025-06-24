@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Button, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Button, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
-import { useIsFocused } from '@react-navigation/native';
-
-
+import { useIsFocused, useRoute } from '@react-navigation/native';
+import AppBar from '../components/AppBar';
 
 const DashboardScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
-  const isFocused = useIsFocused(); // refetch users on screen focus
+  const isFocused = useIsFocused();
+  const route = useRoute();
 
   const fetchUsers = async () => {
     const token = await AsyncStorage.getItem('token');
-    console.log('Token:', token);
-
     try {
       const res = await api.get('/users', {
         headers: { Authorization: `Bearer ${token}` },
@@ -29,147 +27,85 @@ const DashboardScreen = ({ navigation }) => {
     if (isFocused) fetchUsers();
   }, [isFocused]);
 
-  const renderUser = ({ item }) => (
-    <TouchableOpacity
-      style={styles.userCard}
-      onPress={() =>
-        navigation.navigate('UserCollectionHistory', {
-          userId: item.id,
-          userName: item.name,
-        })
-      }
-    >
-      <Text style={styles.name}>{item.name}</Text>
-      <Text>{item.phone} • {item.location}</Text>
-      <Text>Shop: {item.shop_name}</Text>
-      <Text>Collection: {item.frequency.toUpperCase()}</Text>
-    </TouchableOpacity>
-  );
-
   const confirmDelete = (userId, userName) => {
     Alert.alert(
       'Confirm Delete',
       `Are you sure you want to delete ${userName}? All their collections will be deleted.`,
       [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => handleDelete(userId), // 🔁 Call real delete
-        },
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => handleDelete(userId) },
       ]
     );
   };
 
-
   const handleDelete = async (userId) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      console.log('Deleting user with token:', token); // 🪵 Log token
-
-      const res = await api.delete(`/users/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      await api.delete(`/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       Alert.alert('Success', 'User deleted');
       fetchUsers();
     } catch (err) {
-      console.error('Delete Error:', err.response?.data || err.message); // 🔍 Log reason
+      console.error('Delete Error:', err.response?.data || err.message);
       Alert.alert('Error', 'Failed to delete user');
     }
   };
 
-
-
   return (
-
     <View style={styles.container}>
-  <Text style={styles.heading}>Bank Dashboard</Text>
+      <AppBar title='Dashboard' route={route.name} />
+      <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
+        {/* Action Buttons */}
+        
 
-  {/* Custom Styled Buttons */}
-  <View style={styles.buttonGroup}>
-    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('BankProfile')}>
-      <Text style={styles.buttonText}>👤 PROFILE</Text>
-    </TouchableOpacity>
+        {/* User Cards */}
+    { /*   {users.map((item) => (
+          <View key={item.id} style={styles.userCard}>
+            <Text style={styles.userName}>{item.name}</Text>
+            <Text style={styles.userDetail}>{item.shop_name}</Text>
+            <Text style={styles.userDetail}>{item.frequency}</Text>
 
-    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AddUser')}>
-      <Text style={styles.buttonText}>➕ ADD USER</Text>
-    </TouchableOpacity>
+            <View style={styles.cardButtons}>
+              <TouchableOpacity
+                style={styles.viewButton}
+                onPress={() =>
+                  navigation.navigate('UserCollectionHistory', {
+                    userId: item.id,
+                    userName: item.name,
+                  })
+                }
+              >
+                <Text style={styles.viewButtonText}>VIEW</Text>
+              </TouchableOpacity>
 
-    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AddCollection')}>
-      <Text style={styles.buttonText}>💰 ADD COLLECTION</Text>
-    </TouchableOpacity>
-  </View>
+              <Button
+                title="✏️ Edit"
+                onPress={() => navigation.navigate('EditUser', { user: item })}
+              />
 
-  {/* User List */}
-  <FlatList
-    data={users}
-    keyExtractor={(item) => item.id.toString()}
-    renderItem={({ item }) => (
-      <View style={styles.userCard}>
-        <Text style={styles.userName}>{item.name}</Text>
-        <Text style={styles.userDetail}>{item.shop_name}</Text>
-        <Text style={styles.userDetail}>{item.frequency}</Text>
-
-        <View style={styles.cardButtons}>
-          <TouchableOpacity
-            style={styles.viewButton}
-            onPress={() =>
-              navigation.navigate('UserCollectionHistory', {
-                userId: item.id,
-                userName: item.name,
-              })
-            }
-          >
-            <Text style={styles.viewButtonText}>VIEW</Text>
-          </TouchableOpacity>
-          <Button
-  title="✏️ Edit"
-  onPress={() => navigation.navigate('EditUser', { user: item })}
-/>
-
-
-          <TouchableOpacity onPress={() => confirmDelete(item.id, item.name)}>
-            <Text style={styles.deleteText}>🗑 Delete</Text>
-          </TouchableOpacity>
-
-          
-        </View>
-      </View>
-    )}
-  />
-</View>
-
+              <TouchableOpacity onPress={() => confirmDelete(item.id, item.name)}>
+                <Text style={styles.deleteText}>🗑 Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))} */}
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  buttonGroup: {
-    marginBottom: 30,
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  subcontainer: { flexGrow: 1, padding: 20, backgroundColor: '#fff' },
+  buttonGroup: {},
   button: {
     backgroundColor: '#2196F3',
     paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 12,
     alignItems: 'center',
-    elevation: 2, // shadow for Android
+    elevation: 2,
   },
   buttonText: {
     color: '#fff',

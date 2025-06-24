@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import api from '../services/api';
+import AppBar from '../components/AppBar';
+import { useRoute } from '@react-navigation/native';
 
 const AddCollectionScreen = () => {
   const [users, setUsers] = useState([]);
@@ -10,6 +12,9 @@ const AddCollectionScreen = () => {
   const [amount, setAmount] = useState('');
   const [frequency, setFrequency] = useState('daily');
   const [loading, setLoading] = useState(false);
+
+  const [bank, setBank] = useState(null);
+      const route = useRoute();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -57,7 +62,8 @@ const AddCollectionScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add Money Collection</Text>
+      <AppBar title='Add Collection' route={route.name} />
+      <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
 
       {users.length === 0 ? (
         <ActivityIndicator size="large" />
@@ -102,12 +108,13 @@ const AddCollectionScreen = () => {
           <Button title={loading ? 'Saving...' : 'Submit'} onPress={handleSubmit} />
         </>
       )}
+    </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1 },
   title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
   label: { fontWeight: '600', marginBottom: 5, marginTop: 15 },
   input: {
@@ -118,6 +125,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 10,
   },
+  subcontainer:{ flexGrow: 1, padding:20, backgroundColor: '#fff' },
 });
 
 export default AddCollectionScreen;

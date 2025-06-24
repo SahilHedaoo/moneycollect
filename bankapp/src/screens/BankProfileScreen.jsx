@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, Alert } from 'react-native';
+import { View, Text, StyleSheet, Button, Alert, ScrollView} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
+import AppBar from '../components/AppBar';
+import { useRoute } from '@react-navigation/native';
 
 const BankProfileScreen = ({ navigation }) => {
   const [bank, setBank] = useState(null);
+  const route = useRoute();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -34,7 +37,8 @@ const BankProfileScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bank Profile</Text>
+      <AppBar title='Bank Profile' route={route.name} />
+   <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
       {bank ? (
         <>
           <Text style={styles.label}>Name: {bank.name}</Text>
@@ -44,12 +48,14 @@ const BankProfileScreen = ({ navigation }) => {
       ) : (
         <Text>Loading...</Text>
       )}
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1 },
+  subcontainer:{ flexGrow: 1, padding:20, backgroundColor: '#fff' },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
   label: { fontSize: 18, marginBottom: 10 },
 });
