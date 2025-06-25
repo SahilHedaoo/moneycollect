@@ -4,11 +4,33 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { useIsFocused, useRoute } from '@react-navigation/native';
 import AppBar from '../components/AppBar';
+import { Pressable, Animated } from 'react-native';
+
+
 
 const DashboardScreen = ({ navigation }) => {
   const [users, setUsers] = useState([]);
   const isFocused = useIsFocused();
   const route = useRoute();
+  
+useEffect(() => {
+  fetchSummary();
+}, []);
+
+const [summary, setSummary] = useState(null);
+
+const fetchSummary = async () => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const res = await api.get('/collections/summary', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setSummary(res.data);
+  } catch (error) {
+    console.error(error);
+    Alert.alert("Error", "Failed to fetch collection summary");
+  }
+};
 
   const fetchUsers = async () => {
     const token = await AsyncStorage.getItem('token');
@@ -57,7 +79,16 @@ const DashboardScreen = ({ navigation }) => {
       <AppBar title='Dashboard' route={route.name} />
       <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
         {/* Action Buttons */}
-        
+        {summary && (
+  <View style={styles.cardContainer}>
+    <View style={styles.card}><Text>Today: ₹{summary.today}</Text></View>
+    <View style={styles.card}><Text>Yesterday: ₹{summary.yesterday}</Text></View>
+    <View style={styles.card}><Text>This Week: ₹{summary.week}</Text></View>
+    <View style={styles.card}><Text>This Month: ₹{summary.month}</Text></View>
+    <View style={styles.card}><Text>This Year: ₹{summary.year}</Text></View>
+  </View>
+)}
+
 
         {/* User Cards */}
     { /*   {users.map((item) => (
@@ -152,6 +183,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
+  cardContainer: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'space-between',
+  padding: 10,
+},
+card: {
+  backgroundColor: '#f0f0f0',
+  borderRadius: 8,
+  padding: 15,
+  marginBottom: 10,
+  width: '48%',
+},
+
 });
 
 export default DashboardScreen;

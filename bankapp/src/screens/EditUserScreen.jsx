@@ -1,34 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, ScrollView} from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  StyleSheet,
+  ScrollView
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
 import api from '../services/api';
 import AppBar from '../components/AppBar';
 
 const EditUserScreen = ({ route, navigation }) => {
   const { user } = route.params;
 
-  const [name, setName] = useState(user.name);
-  const [phone, setPhone] = useState(user.phone);
-  const [location, setLocation] = useState(user.location);
-  const [shopName, setShopName] = useState(user.shop_name);
-  const [frequency, setFrequency] = useState(user.frequency);
-
-     
+  const [firstName, setFirstName] = useState(user.first_name || '');
+  const [lastName, setLastName] = useState(user.last_name || '');
+  const [phone, setPhone] = useState(user.phone || '');
+  const [email, setEmail] = useState(user.email || '');
+  const [packageName, setPackageName] = useState(user.package_name || 'daily');
+  const [packageAmount, setPackageAmount] = useState(String(user.package_amount || ''));
 
   const handleUpdate = async () => {
+    if (!firstName || !lastName || !phone || !packageName || !packageAmount) {
+      Alert.alert('Validation', 'Please fill in all required fields');
+      return;
+    }
+
     try {
       const token = await AsyncStorage.getItem('token');
-      const res = await api.put(`/users/${user.id}`, {
-        name,
-        phone,
-        location,
-        shop_name: shopName,
-        frequency,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.put(
+        `/users/${user.id}`,
+        {
+          first_name: firstName,
+          last_name: lastName,
+          phone,
+          email,
+          package_name: packageName,
+          package_amount: parseFloat(packageAmount)
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
 
-      Alert.alert('Success', 'User updated!');
+      Alert.alert('Success', 'User updated successfully!');
       navigation.goBack();
     } catch (err) {
       console.error(err);
@@ -38,32 +56,74 @@ const EditUserScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <AppBar title='Edit User' route={route.name} />
-        <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
+      <AppBar title="Edit User" route={route.name} />
+      <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
+        <TextInput
+          style={styles.input}
+          placeholder="First Name *"
+          value={firstName}
+          onChangeText={setFirstName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Last Name *"
+          value={lastName}
+          onChangeText={setLastName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone *"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email (optional)"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
 
-      <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
-      <TextInput style={styles.input} placeholder="Phone" value={phone} onChangeText={setPhone} />
-      <TextInput style={styles.input} placeholder="Location" value={location} onChangeText={setLocation} />
-      <TextInput style={styles.input} placeholder="Shop Name" value={shopName} onChangeText={setShopName} />
-      <TextInput style={styles.input} placeholder="Frequency (daily/weekly/monthly)" value={frequency} onChangeText={setFrequency} />
+        <Text style={styles.label}>Package Name *</Text>
+        <Picker
+          selectedValue={packageName}
+          onValueChange={(itemValue) => setPackageName(itemValue)}
+          style={styles.input}
+        >
+          <Picker.Item label="Daily" value="daily" />
+          <Picker.Item label="Weekly" value="weekly" />
+          <Picker.Item label="Monthly" value="monthly" />
+        </Picker>
 
-      <Button title="Update User" onPress={handleUpdate} color="#2196F3" />
-    </ScrollView>
+        <TextInput
+          style={styles.input}
+          placeholder="Package Amount *"
+          value={packageAmount}
+          onChangeText={setPackageAmount}
+          keyboardType="numeric"
+        />
+
+        <Button title="Update User" onPress={handleUpdate} color="#2196F3" />
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 15 },
+  subcontainer: { flexGrow: 1, padding: 20, backgroundColor: '#fff' },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    marginBottom: 12,
     borderRadius: 8,
     padding: 10,
+    marginBottom: 15
   },
-  subcontainer:{ flexGrow: 1, padding:20, backgroundColor: '#fff' },
+  label: {
+    fontWeight: 'bold',
+    marginBottom: 5
+  }
 });
 
 export default EditUserScreen;

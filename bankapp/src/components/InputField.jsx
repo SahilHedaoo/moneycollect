@@ -6,6 +6,7 @@ const InputField = ({ placeholder, value, onChangeText, secureTextEntry = false 
     <TextInput
       style={styles.input}
       placeholder={placeholder}
+      placeholderTextColor='#aaa'
       value={value}
       onChangeText={onChangeText}
       secureTextEntry={secureTextEntry}

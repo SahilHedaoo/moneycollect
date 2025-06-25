@@ -1,121 +1,129 @@
-// screens/UserListScreen.js
-
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, Button, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useIsFocused, useRoute } from '@react-navigation/native';
-import AppBar from '../components/AppBar';
 import api from '../services/api';
+import AppBar from '../components/AppBar';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const UserListScreen = () => {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const navigation = useNavigation();
-  const isFocused = useIsFocused();
   const route = useRoute();
 
   const fetchUsers = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      const res = await api.get('/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(res.data);
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Could not load users');
-    }
-  };
+    setLoading(true);
+    const token = await AsyncStorage.getItem('token');
 
-  const confirmDelete = (userId, userName) => {
-    Alert.alert(
-      'Confirm Delete',
-      `Are you sure you want to delete ${userName}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', onPress: () => handleDelete(userId) }
-      ]
-    );
-  };
-
-  const handleDelete = async (userId) => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      await api.delete(`/users/${userId}`, {
+      const response = await api.get('/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      Alert.alert('Deleted', 'User deleted');
-      fetchUsers();
+      setUsers(response.data);
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to delete user');
+      Alert.alert('Error', 'Failed to fetch users');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleDelete = async (id) => {
+    const token = await AsyncStorage.getItem('token');
+
+    Alert.alert('Confirm Delete', 'Are you sure you want to delete this user?', [
+      { text: 'Cancel' },
+      {
+        text: 'Delete',
+        onPress: async () => {
+          try {
+            await api.delete(`/users/${id}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            Alert.alert('Deleted', 'User deleted successfully');
+            fetchUsers(); // Refresh list
+          } catch (err) {
+            console.error(err);
+            Alert.alert('Error', 'Failed to delete user');
+          }
+        }
+      }
+    ]);
   };
 
   useEffect(() => {
-    if (isFocused) fetchUsers();
-  }, [isFocused]);
+    fetchUsers();
+  }, []);
+
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      <Text style={styles.name}>{item.first_name} {item.last_name}</Text>
+      <Text style={styles.details}>📞 {item.phone}</Text>
+      {item.email ? <Text style={styles.details}>✉️ {item.email}</Text> : null}
+      <Text style={styles.details}>📦 {item.package_name} - ₹{item.package_amount}</Text>
+
+      <View style={styles.actions}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('UserCollectionHistory', {
+  userId: item.id,
+  userName: `${item.first_name} ${item.last_name}`
+})}>
+          <Text style={styles.buttonText}>View</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EditUser', { user: item })}>
+          <Text style={styles.buttonText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, { backgroundColor: '#ff4d4d' }]} onPress={() => handleDelete(item.id)}>
+          <Text style={styles.buttonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       <AppBar title="Users" route={route.name} />
-      <ScrollView contentContainerStyle={styles.subcontainer}>
-        {users.map((user) => (
-          <View key={user.id} style={styles.card}>
-            <Text style={styles.name}>{user.name}</Text>
-            <Text>{user.shop_name}</Text>
-            <Text>{user.frequency}</Text>
-
-            <View style={styles.actions}>
-              <TouchableOpacity
-                style={styles.viewBtn}
-                onPress={() =>
-                  navigation.navigate('UserCollectionHistory', {
-                    userId: user.id,
-                    userName: user.name,
-                  })
-                }
-              >
-                <Text style={styles.viewText}>View</Text>
-              </TouchableOpacity>
-
-              <Button
-                title="✏️ Edit"
-                onPress={() => navigation.navigate('EditUser', { user })}
-              />
-              <TouchableOpacity onPress={() => confirmDelete(user.id, user.name)}>
-                <Text style={styles.deleteText}>🗑 Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          data={users}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  subcontainer: { flexGrow: 1, padding: 20 },
+  container: { flex: 1 },
+  list: { padding: 16 },
   card: {
-    backgroundColor: '#f1f1f1',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
     padding: 16,
-    borderRadius: 10,
-    marginBottom: 12,
+    marginBottom: 15,
+    elevation: 2,
   },
-  name: { fontSize: 16, fontWeight: 'bold' },
+  name: { fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
+  details: { fontSize: 14, marginBottom: 3 },
   actions: {
-    marginTop: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginTop: 10,
+    justifyContent: 'space-between'
   },
-  viewBtn: {
-    backgroundColor: '#2196F3',
+  button: {
+    backgroundColor: '#007bff',
     paddingVertical: 6,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     borderRadius: 6,
   },
-  viewText: { color: '#fff', fontWeight: 'bold' },
-  deleteText: { color: 'red', fontWeight: 'bold' },
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
+  }
 });
 
 export default UserListScreen;

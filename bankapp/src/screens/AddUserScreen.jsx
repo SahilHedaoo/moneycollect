@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert,ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { Picker } from '@react-native-picker/picker';
@@ -7,20 +7,18 @@ import AppBar from '../components/AppBar';
 import { useRoute } from '@react-navigation/native';
 
 const AddUserScreen = () => {
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
-  const [location, setLocation] = useState('');
-  const [shopName, setShopName] = useState('');
-  const [frequency, setFrequency] = useState('daily');
+  const [email, setEmail] = useState('');
+  const [packageName, setPackageName] = useState('Daily');
+  const [packageAmount, setPackageAmount] = useState('');
 
-  const [bank, setBank] = useState(null);
-    const route = useRoute();
-
-    
+  const route = useRoute();
 
   const handleAddUser = async () => {
-    if (!name || !phone || !location || !shopName || !frequency) {
-      Alert.alert('Validation', 'Please fill in all fields');
+    if (!firstName || !lastName || !phone || !packageName || !packageAmount) {
+      Alert.alert('Validation', 'Please fill all required fields');
       return;
     }
 
@@ -29,16 +27,25 @@ const AddUserScreen = () => {
     try {
       await api.post(
         '/users',
-        { name, phone, location, shop_name: shopName, frequency },
+        {
+          first_name: firstName,
+          last_name: lastName,
+          phone,
+          email,
+          package_name: packageName,
+          package_amount: parseFloat(packageAmount)
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       Alert.alert('Success', 'User added successfully!');
-      setName('');
+      // Clear inputs
+      setFirstName('');
+      setLastName('');
       setPhone('');
-      setLocation('');
-      setShopName('');
-      setFrequency('daily');
+      setEmail('');
+      setPackageName('Daily');
+      setPackageAmount('');
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Failed to add user');
@@ -49,67 +56,40 @@ const AddUserScreen = () => {
     <View style={styles.container}>
       <AppBar title='Add User' route={route.name} />
       <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-      />
+        <TextInput style={styles.input} placeholder="First Name *" value={firstName} onChangeText={setFirstName} />
+        <TextInput style={styles.input} placeholder="Last Name *" value={lastName} onChangeText={setLastName} />
+        <TextInput style={styles.input} placeholder="Phone *" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+        <TextInput style={styles.input} placeholder="Email (optional)" value={email} onChangeText={setEmail} keyboardType="email-address" />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Phone"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
+        <Text style={styles.label}>Package Name *</Text>
+        <Picker selectedValue={packageName} onValueChange={setPackageName} style={styles.input}>
+          <Picker.Item label="Daily" value="Daily" />
+          <Picker.Item label="Weekly" value="Weekly" />
+          <Picker.Item label="Monthly" value="Monthly" />
+        </Picker>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Location"
-        value={location}
-        onChangeText={setLocation}
-      />
+        <TextInput style={styles.input} placeholder="Package Amount *" value={packageAmount} onChangeText={setPackageAmount} keyboardType="numeric" />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Shop Name"
-        value={shopName}
-        onChangeText={setShopName}
-      />
-
-      <Text style={styles.label}>Money Receiving Frequency</Text>
-      <Picker
-        selectedValue={frequency}
-        onValueChange={(itemValue) => setFrequency(itemValue)}
-        style={styles.input}
-      >
-        <Picker.Item label="Daily" value="daily" />
-        <Picker.Item label="Weekly" value="weekly" />
-        <Picker.Item label="Monthly" value="monthly" />
-      </Picker>
-
-      <Button title="Add Customer" onPress={handleAddUser} />
-    </ScrollView>
+        <Button title="Add User" onPress={handleAddUser} />
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1},
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  container: { flex: 1 },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
+    borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10, marginBottom: 15,
   },
   label: {
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  subcontainer:{ flexGrow: 1, padding:20, backgroundColor: '#fff' },
+  subcontainer: {
+    flexGrow: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+  },
 });
 
 export default AddUserScreen;
