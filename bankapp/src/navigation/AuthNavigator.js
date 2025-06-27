@@ -9,9 +9,9 @@ import UserCollectionHistoryScreen from '../screens/UserCollectionHistoryScreen'
 import BankProfileScreen from '../screens/BankProfileScreen';
 import EditUserScreen from '../screens/EditUserScreen';
 import UserListScreen from '../screens/UserListScreen';
-
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import FilteredCollectionsScreen from '../screens/FilteredCollectionsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -36,6 +36,8 @@ const AuthNavigator = () => {
       <Stack.Screen name="BankProfile" component={BankProfileScreen} />
       <Stack.Screen name="EditUser" component={EditUserScreen} />
       <Stack.Screen name="UserList" component={UserListScreen} />
+      <Stack.Screen name="FilteredCollections" component={FilteredCollectionsScreen}/>
+
     </Stack.Navigator>
   );
 }

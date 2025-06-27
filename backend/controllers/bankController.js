@@ -47,6 +47,7 @@ exports.loginBank = (req, res) => {
   const { email, password } = req.body;
 
   db.query('SELECT * FROM banks WHERE email = ?', [email], async (err, results) => {
+    console.log("err", err);
     if (err || results.length === 0) return res.status(400).json({ message: 'Invalid credentials' });
 
     const bank = results[0];
@@ -55,7 +56,7 @@ exports.loginBank = (req, res) => {
     if (!match) return res.status(400).json({ message: 'Invalid password' });
 
     const token = jwt.sign({ bankId: bank.id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    return res.status(200).json({ message: 'Login successful', token });
+    return res.status(200).json({ message: 'Login successful', token: token, id: bank.id });
   });
 };
 

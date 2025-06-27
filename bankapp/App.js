@@ -9,20 +9,20 @@ const App = () => {
   useEffect(() => {
     Appearance.setColorScheme('light');
   }, [])
-  
-   
+
+
   return (
     <PaperProvider>
-    <SafeAreaProvider>
-    <NavigationContainer>
-      <AuthNavigator />
-    </NavigationContainer>
-    <StatusBar
-      animated= {true}
-      backgroundColor={'#00bbff'}
-      barStyle={'dark-content'}
-    />
-    </SafeAreaProvider></PaperProvider>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <AuthNavigator />
+        </NavigationContainer>
+        <StatusBar
+          animated={true}
+          backgroundColor={'#00bbff'}
+          barStyle={'dark-content'}
+        />
+      </SafeAreaProvider></PaperProvider>
   );
 };
 

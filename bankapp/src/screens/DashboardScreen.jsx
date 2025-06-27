@@ -1,36 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, Button, StyleSheet, TouchableOpacity, Alert, ScrollView, TouchableHighlight } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
-import { useIsFocused, useRoute } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import AppBar from '../components/AppBar';
 import { Pressable, Animated } from 'react-native';
 
 
-
-const DashboardScreen = ({ navigation }) => {
+const DashboardScreen = () => {
   const [users, setUsers] = useState([]);
   const isFocused = useIsFocused();
   const route = useRoute();
-  
-useEffect(() => {
-  fetchSummary();
-}, []);
+  const navigation = useNavigation();
+  const [collections, setCollections] = useState([]);
 
-const [summary, setSummary] = useState(null);
+  useEffect(() => {
+    if (isFocused) {
+      fetchSummary();
+    }
+  }, [isFocused]);
 
-const fetchSummary = async () => {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    const res = await api.get('/collections/summary', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setSummary(res.data);
-  } catch (error) {
-    console.error(error);
-    Alert.alert("Error", "Failed to fetch collection summary");
-  }
-};
+  const [summary, setSummary] = useState(null);
+
+  const fetchSummary = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const res = await api.get('/collections/summary', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSummary(res.data);
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Failed to fetch collection summary");
+    }
+  };
 
   const fetchUsers = async () => {
     const token = await AsyncStorage.getItem('token');
@@ -74,53 +77,34 @@ const fetchSummary = async () => {
     }
   };
 
+  const fetchcollections = async () => {
+    const id = await AsyncStorage.getItem('id');
+    try {
+      const res = await api.get(`/collections/collections?user_id=${Number(id)}`);
+      setCollections(res);
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Could not load collections');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <AppBar title='Dashboard' route={route.name} />
       <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
         {/* Action Buttons */}
         {summary && (
-  <View style={styles.cardContainer}>
-    <View style={styles.card}><Text>Today: ₹{summary.today}</Text></View>
-    <View style={styles.card}><Text>Yesterday: ₹{summary.yesterday}</Text></View>
-    <View style={styles.card}><Text>This Week: ₹{summary.week}</Text></View>
-    <View style={styles.card}><Text>This Month: ₹{summary.month}</Text></View>
-    <View style={styles.card}><Text>This Year: ₹{summary.year}</Text></View>
-  </View>
-)}
-
-
-        {/* User Cards */}
-    { /*   {users.map((item) => (
-          <View key={item.id} style={styles.userCard}>
-            <Text style={styles.userName}>{item.name}</Text>
-            <Text style={styles.userDetail}>{item.shop_name}</Text>
-            <Text style={styles.userDetail}>{item.frequency}</Text>
-
-            <View style={styles.cardButtons}>
-              <TouchableOpacity
-                style={styles.viewButton}
-                onPress={() =>
-                  navigation.navigate('UserCollectionHistory', {
-                    userId: item.id,
-                    userName: item.name,
-                  })
-                }
-              >
-                <Text style={styles.viewButtonText}>VIEW</Text>
-              </TouchableOpacity>
-
-              <Button
-                title="✏️ Edit"
-                onPress={() => navigation.navigate('EditUser', { user: item })}
-              />
-
-              <TouchableOpacity onPress={() => confirmDelete(item.id, item.name)}>
-                <Text style={styles.deleteText}>🗑 Delete</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.cardContainer}>
+            <TouchableHighlight underlayColor='transparent' onPress={() => navigation.navigate('FilteredCollections')}>
+              <View style={styles.card}><Text>Today: ₹{summary.today}</Text></View>
+            </TouchableHighlight>
+            <View style={styles.card}><Text>Yesterday: ₹{summary.yesterday}</Text></View>
+            <View style={styles.card}><Text>This Week: ₹{summary.week}</Text></View>
+            <View style={styles.card}><Text>This Month: ₹{summary.month}</Text></View>
+            <View style={styles.card}><Text>This Year: ₹{summary.year}</Text></View>
           </View>
-        ))} */}
+        )}
+        <Button title='demo' onPress={fetchcollections} />
       </ScrollView>
     </View>
   );
@@ -184,18 +168,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   cardContainer: {
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  justifyContent: 'space-between',
-  padding: 10,
-},
-card: {
-  backgroundColor: '#f0f0f0',
-  borderRadius: 8,
-  padding: 15,
-  marginBottom: 10,
-  width: '48%',
-},
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    padding: 10,
+  },
+  card: {
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 10,
+    width: '48%',
+  },
 
 });
 

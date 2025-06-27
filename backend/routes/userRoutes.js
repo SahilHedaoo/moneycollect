@@ -7,6 +7,4 @@ router.get('/', getUsers);         // GET /api/users
 router.delete('/:userId', deleteUser);
 router.put('/:id', updateUser);
 
-
-
 module.exports = router;

@@ -12,14 +12,20 @@ const LoginScreen = ({ navigation }) => {
     try {
       const res = await api.post('/banks/login', { email, password });
       await AsyncStorage.setItem('token', res.data.token);
+      await AsyncStorage.setItem('id', res.data.id.toString());
+      console.log("data", res.data);
       Alert.alert('Success', 'Logged in!');
       // Redirect to Dashboard screen 
       // navigation.navigate('Dashboard');
-      
-    navigation.navigate('Dashboard');  // Redirect to Dashboard
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Dashboard' }],
+      }); // Redirect to Dashboard
     } catch (err) {
       Alert.alert('Login Failed', err?.response?.data?.message || 'Something went wrong');
     }
+    
   };
 
   return (

@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import AppBar from '../components/AppBar';
 import { useRoute } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
+import { Searchbar } from 'react-native-paper';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 
 const AddCollectionScreen = () => {
   const [users, setUsers] = useState([]);
@@ -13,6 +16,12 @@ const AddCollectionScreen = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const [collectionDate, setCollectionDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
 
   const route = useRoute();
 
@@ -40,7 +49,9 @@ const AddCollectionScreen = () => {
       `${user.first_name} ${user.last_name}`.toLowerCase().includes(text.toLowerCase())
     );
     setFilteredUsers(filtered);
+    setShowDropdown(true); // Show dropdown on search
   };
+
 
   const handleUserSelect = (userId) => {
     const user = users.find((u) => u.id === userId);
@@ -55,15 +66,17 @@ const AddCollectionScreen = () => {
     }
 
     const token = await AsyncStorage.getItem('token');
+    const id = await AsyncStorage.getItem('id');
     setLoading(true);
 
     try {
       await api.post(
-        '/collections',
+        `/collections?user_id=${Number(id)}`,
         {
           user_id: selectedUser.id,
           amount,
           frequency: selectedUser.package_name, // fixed and sent from backend
+           collected_at: collectionDate.toISOString(), 
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -88,28 +101,50 @@ const AddCollectionScreen = () => {
         ) : (
           <>
             <Text style={styles.label}>Search User</Text>
-            <TextInput
-              style={styles.input}
+            <Searchbar 
               placeholder="Search by name"
-              value={searchTerm}
               onChangeText={handleSearch}
+              value={searchTerm}
             />
 
-            <Text style={styles.label}>Select User</Text>
-            <Picker
-              selectedValue={selectedUser?.id || ''}
-              onValueChange={(value) => handleUserSelect(value)}
-              style={styles.input}
-            >
-              <Picker.Item label="Select User" value="" />
-              {filteredUsers.map((user) => (
-                <Picker.Item
-                  key={user.id}
-                  label={`${user.first_name} ${user.last_name}`}
-                  value={user.id}
-                />
-              ))}
-            </Picker>
+            {showDropdown && filteredUsers.length > 0 && (
+              <View style={styles.dropdown}>
+                {filteredUsers.map((user) => (
+                  <TouchableOpacity
+                    key={user.id}
+                    onPress={() => {
+                      setSelectedUser(user);
+                      setAmount(user.package_amount.toString());
+                      setSearchTerm(`${user.first_name} ${user.last_name}`);
+                      setShowDropdown(false);
+                    }}
+                    style={styles.dropdownItem}
+                  >
+                    <Text>{user.first_name} {user.last_name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            <Text style={styles.label}>Collection Date</Text>
+            <Button
+              title={`📅 ${collectionDate.toDateString()}`}
+              onPress={() => setShowDatePicker(true)}
+              color="#007bff"
+            />
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={collectionDate}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) setCollectionDate(selectedDate);
+                }}
+              />
+            )}
+
 
             <Text style={styles.label}>Amount</Text>
             <TextInput
@@ -147,6 +182,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   subcontainer: { flexGrow: 1, padding: 20, backgroundColor: '#fff' },
+  dropdown: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    maxHeight: 150,
+    marginBottom: 10,
+    elevation: 3,
+    zIndex: 10,
+  },
+  dropdownItem: {
+    padding: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor:"#ffe"
+  },
+
 });
 
 export default AddCollectionScreen;
