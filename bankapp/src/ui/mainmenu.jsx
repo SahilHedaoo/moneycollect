@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   menu: {
-    backgroundColor: '#fff', // Ensure menu has a visible background
+    backgroundColor: '#fff', 
   },
 });
 

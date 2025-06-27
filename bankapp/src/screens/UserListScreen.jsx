@@ -65,9 +65,9 @@ const UserListScreen = () => {
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('UserCollectionHistory', {
-  userId: item.id,
-  userName: `${item.first_name} ${item.last_name}`
-})}>
+          userId: item.id,
+          userName: `${item.first_name} ${item.last_name}`
+        })}>
           <Text style={styles.buttonText}>View</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EditUser', { user: item })}>

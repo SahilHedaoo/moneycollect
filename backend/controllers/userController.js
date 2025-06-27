@@ -1,7 +1,6 @@
 const db = require('../models/db');
 const jwt = require('jsonwebtoken');
 
-// ➤ Add New User
 exports.addUser = (req, res) => {
   const { first_name, last_name, phone, email, package_name, package_amount } = req.body;
 
@@ -28,7 +27,6 @@ exports.addUser = (req, res) => {
   }
 };
 
-// ➤ Get Users by Bank
 exports.getUsers = (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   try {
@@ -48,7 +46,6 @@ exports.getUsers = (req, res) => {
   }
 };
 
-// ➤ Delete User
 exports.deleteUser = (req, res) => {
   const { userId } = req.params;
   const token = req.headers.authorization?.split(' ')[1];
@@ -73,7 +70,6 @@ exports.deleteUser = (req, res) => {
   }
 };
 
-// ➤ Update User
 exports.updateUser = (req, res) => {
   const { id } = req.params;
   const { first_name, last_name, phone, email, package_name, package_amount } = req.body;

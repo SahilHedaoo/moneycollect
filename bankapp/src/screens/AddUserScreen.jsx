@@ -23,7 +23,6 @@ const AddUserScreen = () => {
     }
 
     const token = await AsyncStorage.getItem('token');
-
     try {
       await api.post(
         '/users',

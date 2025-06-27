@@ -8,7 +8,6 @@ dotenv.config();
 exports.registerBank = (req, res) => {
   const { name, email, password } = req.body;
 
-  // Basic validations
   const passwordRegex = /^[a-zA-Z0-9]{6,10}$/;
 
   if (!name || name.trim() === '') {

@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 
 exports.addCollection = (req, res) => {
   const { user_id, amount, frequency, collected_at } = req.body;
-  // Use the provided collected_at if available, otherwise use current date
+  
   const collectedAt = collected_at ? new Date(collected_at) : new Date();
   db.query(
     'INSERT INTO collections (bank_id, user_id, amount, frequency, collected_at) VALUES (?, ?, ?, ?, ?)',
@@ -154,13 +154,27 @@ exports.getUser = (req, res) => {
   });
 };
 
-exports.getCollections= (req, res) => {
-  const { user_id } = req.query;
-  console.log("id", user_id);
-  query = 'SELECT * FROM collections WHERE bank_id = ?';
+exports.getCollections = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Token missing' });
 
-  db.query(query, [user_id], (err, results) => {
-    if (err) return res.status(500).json({ error: err });
-    res.status(200).json(results);
-  });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
+
+    const query = `
+      SELECT c.*, u.first_name, u.last_name 
+      FROM collections c 
+      JOIN users u ON c.user_id = u.id 
+      WHERE u.bank_id = ? 
+      ORDER BY c.collected_at DESC
+    `;
+
+    db.query(query, [bankId], (err, results) => {
+      if (err) return res.status(500).json({ error: err });
+      res.status(200).json(results);
+    });
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
 };
