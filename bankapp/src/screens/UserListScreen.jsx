@@ -82,7 +82,6 @@ const UserListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppBar title="Users" route={route.name} />
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }} />
       ) : (

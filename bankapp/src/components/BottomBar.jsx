@@ -1,33 +1,52 @@
 import React from 'react';
-import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
+import { Pressable, Text, View } from 'react-native';
+import { Appbar } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import SettingsScreen from '../screens/SettingsScreen';
 
-const Tab = createMaterialBottomTabNavigator();
+export default function BottomBar({ title, navigation, route }) {
+  const { bottom } = useSafeAreaInsets();
+  const hideBar = ['Login', 'Signup'].includes(title);
 
-const BottomBar = () => {
+  if (hideBar) return null;
+
   return (
-    <NavigationContainer independent={true}> {/* 👈 Important to avoid nesting errors */}
-      <Tab.Navigator
-        initialRouteName="Settings"
-        shifting={true}
-        barStyle={{ backgroundColor: '#2196F3' }}
-        activeColor="#fff"
+    <Appbar
+      style={{
+        height: 70 + bottom,
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        backgroundColor: '#2196F3',
+      }}
+    >
+      <Pressable
+        onPress={() => navigation.navigate('Dashboard')}
+        style={{ alignItems: 'center' }}
       >
-        <Tab.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{
-            tabBarLabel: 'Settings',
-            tabBarIcon: ({ color }) => (
-              <MaterialCommunityIcons name="cog" color={color} size={24} />
-            ),
-          }}
+        <MaterialCommunityIcons
+          name="view-dashboard"
+          color={title === 'Dashboard' ? '#fff' : '#b6dcfb'}
+          size={25}
         />
-      </Tab.Navigator>
-    </NavigationContainer>
-  );
-};
+        <Text style={{ color: title === 'Dashboard' ? '#fff' : '#b6dcfb' }}>
+          Dashboard
+        </Text>
+      </Pressable>
 
-export default BottomBar;
+      <Pressable
+        onPress={() => navigation.navigate('Settings')}
+        style={{ alignItems: 'center' }}
+      >
+        <MaterialCommunityIcons
+          name="cog"
+          color={title === 'Settings' ? '#fff' : '#b6dcfb'}
+          size={25}
+        />
+        <Text style={{ color: title === 'Settings' ? '#fff' : '#b6dcfb' }}>
+          Settings
+        </Text>
+      </Pressable>
+    </Appbar>
+  );
+}

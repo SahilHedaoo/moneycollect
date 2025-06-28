@@ -22,7 +22,7 @@ const Mainmenu = () => {
 
   return (
     <View>
-      <Appbar.Action icon={MORE_ICON} onPress={openMenu} />
+      <Appbar.Action icon={MORE_ICON} iconColor='#fff' onPress={openMenu} />
       <Modal
         transparent={true}
         visible={visible}

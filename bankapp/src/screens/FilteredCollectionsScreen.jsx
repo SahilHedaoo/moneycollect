@@ -4,14 +4,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import AppBar from '../components/AppBar';
 import useFetch from '../hooks/useFetch';
+import { useRoute } from '@react-navigation/native';
 
-const FilteredCollectionsScreen = ({ route }) => {
+const FilteredCollectionsScreen = () => {
   const { data: usersData, loading: usersLoading } = useFetch('/users');
   const [users, setUsers] = useState([]);
   const [collections, setCollections] = useState([]);
   const [filteredCollections, setFilteredCollections] = useState([]);
+  const route = useRoute();
   const { filterType } = route.params || {}; // Get filterType from route params
-  console.log("usersData", usersData);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -111,7 +112,6 @@ const FilteredCollectionsScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <AppBar title="Filtered Collection" route={route.name} />
       <View style={styles.subcontainer}>
         <Text style={styles.heading}>
           {filterType

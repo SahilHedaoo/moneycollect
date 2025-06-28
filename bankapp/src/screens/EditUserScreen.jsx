@@ -12,10 +12,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import api from '../services/api';
 import AppBar from '../components/AppBar';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
-const EditUserScreen = ({ route, navigation }) => {
+const EditUserScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
   const { user } = route.params;
-
   const [firstName, setFirstName] = useState(user.first_name || '');
   const [lastName, setLastName] = useState(user.last_name || '');
   const [phone, setPhone] = useState(user.phone || '');
@@ -56,7 +58,6 @@ const EditUserScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <AppBar title="Edit User" route={route.name} />
       <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
         <TextInput
           style={styles.input}

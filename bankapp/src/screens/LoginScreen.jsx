@@ -3,10 +3,12 @@ import { View, Text, Button, StyleSheet, Alert, ScrollView } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import InputField from '../components/InputField';
 import api from '../services/api';
+import { useNavigation } from '@react-navigation/native';
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigation = useNavigation();
 
   const handleLogin = async () => {
     try {

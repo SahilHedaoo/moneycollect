@@ -11,7 +11,6 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
-import AppBar from '../components/AppBar';
 
 const DashboardScreen = () => {
   const [summary, setSummary] = useState(null);
@@ -100,7 +99,6 @@ const DashboardScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppBar title="Dashboard" route={route.name} />
       <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
         {summary && (
           <View style={styles.cardContainer}>

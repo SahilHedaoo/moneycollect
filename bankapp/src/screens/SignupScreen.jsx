@@ -3,12 +3,13 @@ import { View, Text, Button, StyleSheet, Alert } from 'react-native';
 import InputField from '../components/InputField';
 import api from '../services/api';
 import { TouchableOpacity, isValidForm } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-
-const SignupScreen = ({ navigation }) => {
+const SignupScreen = () => {
   const [bankName, setBankName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigation = useNavigation();
 
   const handleSignup = async () => {
     const trimmedBankName = (bankName || '').trim();

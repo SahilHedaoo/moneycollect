@@ -37,7 +37,6 @@ const BankProfileScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <AppBar title='Bank Profile' route={route.name} />
       <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
         {bank ? (
           <>

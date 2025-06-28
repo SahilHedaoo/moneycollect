@@ -13,11 +13,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AppBar from '../components/AppBar';
+import { useRoute } from '@react-navigation/native';
 
-const UserCollectionHistoryScreen = ({ route }) => {
+const UserCollectionHistoryScreen = () => {
+  const route = useRoute();
   const { userId, userName } = route.params;
   const { width } = useWindowDimensions();
-
   const [collections, setCollections] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -78,7 +79,6 @@ const UserCollectionHistoryScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <AppBar title="User Collection" route={route.name} />
       <ScrollView contentContainerStyle={styles.subcontainer}>
         <Text style={styles.title}>{userName}'s Collection History</Text>
 

@@ -94,7 +94,6 @@ const AddCollectionScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppBar title="Add Collection" route={route.name} />
       <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
         {users.length === 0 ? (
           <ActivityIndicator size="large" />
@@ -155,7 +154,7 @@ const AddCollectionScreen = () => {
               placeholder="Enter amount"
             />
 
-            <Text style={styles.label}>Frequency</Text>
+            <Text style={styles.label}>Package Name</Text>
             <TextInput
               style={[styles.input, { backgroundColor: '#eee' }]}
               value={selectedUser?.package_name || ''}
