@@ -5,6 +5,10 @@ import api from '../services/api';
 import AppBar from '../components/AppBar';
 import useFetch from '../hooks/useFetch';
 import { useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { TouchableOpacity } from 'react-native';
+
+
 
 const FilteredCollectionsScreen = () => {
   const { data: usersData, loading: usersLoading } = useFetch('/users');
@@ -13,6 +17,7 @@ const FilteredCollectionsScreen = () => {
   const [filteredCollections, setFilteredCollections] = useState([]);
   const route = useRoute();
   const { filterType } = route.params || {}; // Get filterType from route params
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -122,14 +127,17 @@ const FilteredCollectionsScreen = () => {
           data={filteredCollections}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Text style={styles.name}>
-                {item.first_name} {item.last_name}
-              </Text>
-              <Text>Amount: ₹{item.amount}</Text>
-              <Text>Date: {new Date(item.collected_at).toLocaleString()}</Text>
-            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Receipt', { item })}>
+              <View style={styles.card}>
+                <Text style={styles.name}>
+                  {item.first_name} {item.last_name}
+                </Text>
+                <Text style={styles.amount}>Amount: ₹{item.amount}</Text>
+                <Text>Date: {new Date(item.collected_at).toLocaleString()}</Text>
+              </View>
+            </TouchableOpacity>
           )}
+
           ListEmptyComponent={<Text>No collections found for this period.</Text>}
         />
       </View>
@@ -149,6 +157,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: '#f9f9f9',
   },
+  amount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e88e5',
+    marginTop: 4,
+    lineHeight: 22,
+  },
+
   name: { fontWeight: 'bold', fontSize: 16 },
 });
 

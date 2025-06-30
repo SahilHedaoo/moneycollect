@@ -11,6 +11,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
+import { FAB } from 'react-native-paper';
+
 
 const DashboardScreen = () => {
   const [summary, setSummary] = useState(null);
@@ -110,6 +112,13 @@ const DashboardScreen = () => {
           </View>
         )}
       </ScrollView>
+      <FAB
+        style={styles.fab}
+        icon="plus"
+        color="white"
+        onPress={() => navigation.navigate('AddCollection')}
+      />
+
     </View>
   );
 };
@@ -139,9 +148,11 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#f0f0f0',
     borderRadius: 10,
-    padding: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
     elevation: 3,
   },
+
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -152,7 +163,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1e88e5',
+    paddingBottom: 4,
+    lineHeight: 24,
   },
+  fab: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#1e88e5',
+    margin: 16
+  },
+
 });
 
 export default DashboardScreen;

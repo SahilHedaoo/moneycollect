@@ -12,7 +12,7 @@ const AppContent = () => {
         <StatusBar
           animated={true}
           backgroundColor={'#00bbff'}
-          barStyle={'dark-content'}
+          barStyle={'light-content'}
         />
       </SafeAreaProvider>
     </PaperProvider>

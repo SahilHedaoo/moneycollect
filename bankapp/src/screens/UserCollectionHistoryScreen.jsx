@@ -83,24 +83,29 @@ const UserCollectionHistoryScreen = () => {
         <Text style={styles.title}>{userName}'s Collection History</Text>
 
         <View style={[styles.filterRow, { flexDirection: width < 400 ? 'column' : 'row' }]}>
-          <TouchableOpacity style={styles.button} onPress={() => setShowStart(true)}>
-            <Text style={styles.buttonText}>🗓 Start Date</Text>
-          </TouchableOpacity>
-          <Text style={styles.dateLabel}>
-            {startDate ? startDate.toDateString() : 'No date selected'}
-          </Text>
+          <View style={styles.dateContainer}>
+            <TouchableOpacity style={styles.button} onPress={() => setShowStart(true)}>
+              <Text style={styles.buttonText}>🗓 Start</Text>
+            </TouchableOpacity>
+            <Text style={styles.dateLabel}>
+              {startDate ? startDate.toDateString() : 'No date selected'}
+            </Text>
+          </View>
 
-          <TouchableOpacity style={styles.button} onPress={() => setShowEnd(true)}>
-            <Text style={styles.buttonText}>🗓 End Date</Text>
-          </TouchableOpacity>
-          <Text style={styles.dateLabel}>
-            {endDate ? endDate.toDateString() : 'No date selected'}
-          </Text>
+          <View style={styles.dateContainer}>
+            <TouchableOpacity style={styles.button} onPress={() => setShowEnd(true)}>
+              <Text style={styles.buttonText}>🗓 End</Text>
+            </TouchableOpacity>
+            <Text style={styles.dateLabel}>
+              {endDate ? endDate.toDateString() : 'No date selected'}
+            </Text>
+          </View>
 
           <TouchableOpacity style={[styles.button, styles.filterButton]} onPress={handleFilter}>
-            <Text style={styles.buttonText}>🔍 Filter</Text>
+            <Text style={[styles.buttonText, { color: '#fff' }]}>🔍 Filter</Text>
           </TouchableOpacity>
         </View>
+
 
         {showStart && (
           <DateTimePicker
@@ -147,34 +152,77 @@ const UserCollectionHistoryScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  subcontainer: { padding: 16, backgroundColor: '#fff', flexGrow: 1 },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
-  filterRow: {
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
+
+  subcontainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+    flexGrow: 1,
+  },
+
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
     marginBottom: 16,
-    gap: 8,
+    textAlign: 'center',
   },
+
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fafafa',
+    padding: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    flex: 1,
+    maxWidth: '48%',
+    gap: 6,
+  },
+
   dateLabel: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#555',
-    marginBottom: 8,
-    paddingHorizontal: 4,
-  },
-  button: {
     backgroundColor: '#f0f0f0',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    flex: 1,
+    textAlign: 'center',
+  },
+
+  button: {
+    backgroundColor: '#e3f2fd',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
+    elevation: 2,
   },
+
   filterButton: {
     backgroundColor: '#1e88e5',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignSelf: 'center',
   },
+
   buttonText: {
     color: '#000',
     fontWeight: 'bold',
+    fontSize: 14,
   },
+
   item: {
     backgroundColor: '#f8f8f8',
     padding: 14,
@@ -183,26 +231,34 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     marginBottom: 12,
   },
+
   amount: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1e88e5',
+    paddingBottom: 1,
+    lineHeight: 24,
   },
+
   frequency: {
     fontWeight: '600',
     color: '#444',
     marginTop: 4,
   },
+
   date: {
     color: '#666',
     marginTop: 4,
   },
+
   total: {
     fontSize: 18,
     fontWeight: 'bold',
     color: 'green',
-    marginBottom: 15,
+    marginBottom: 10,
+    paddingBottom: 4,
     textAlign: 'center',
+    lineHeight: 24,
   },
 });
 

@@ -100,7 +100,7 @@ const AddCollectionScreen = () => {
         ) : (
           <>
             <Text style={styles.label}>Search User</Text>
-            <Searchbar 
+            <Searchbar style={styles.search}
               placeholder="Search by name"
               onChangeText={handleSearch}
               value={searchTerm}
@@ -126,11 +126,10 @@ const AddCollectionScreen = () => {
             )}
 
             <Text style={styles.label}>Collection Date</Text>
-            <Button
-              title={`📅 ${collectionDate.toDateString()}`}
-              onPress={() => setShowDatePicker(true)}
-              color="#007bff"
-            />
+           <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
+  <Text style={styles.dateButtonText}>📅 {collectionDate.toDateString()}</Text>
+</TouchableOpacity>
+
 
             {showDatePicker && (
               <DateTimePicker
@@ -198,6 +197,27 @@ const styles = StyleSheet.create({
     backgroundColor:"#ffe"
   },
 
+  dateButton: {
+  borderWidth: 1,
+  borderColor: '#ccc',
+  borderRadius: 8,
+  paddingVertical: 12,
+  paddingHorizontal: 10,
+  backgroundColor: '#f0f8ff',
+  marginBottom: 10,
+},
+
+dateButtonText: {
+  color: '#007bff',
+  fontWeight: '600',
+  fontSize: 16,
+},
+
+search: {
+  height:40,
+  textAlign:'center',justifyContent:'center',
+  backgroundColor:'#e7f3fd',
+}
 });
 
 export default AddCollectionScreen;

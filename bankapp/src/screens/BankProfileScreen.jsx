@@ -42,7 +42,6 @@ const BankProfileScreen = ({ navigation }) => {
           <>
             <Text style={styles.label}>Name: {bank.name}</Text>
             <Text style={styles.label}>Email: {bank.email}</Text>
-            <Button title="Logout" onPress={handleLogout} />
           </>
         ) : (
           <Text>Loading...</Text>
@@ -53,10 +52,38 @@ const BankProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  subcontainer: { flexGrow: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  label: { fontSize: 18, marginBottom: 10 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f6f8fa', // Light gray background
+  },
+  subcontainer: {
+    flexGrow: 1,
+    padding: 24,
+    backgroundColor: '#fff',
+    margin: 16,
+    borderRadius: 12,
+    elevation: 4, // Android shadow
+    shadowColor: '#000', // iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 18,
+    marginBottom: 12,
+    color: '#444',
+    backgroundColor: '#eef2f5',
+    padding: 12,
+    borderRadius: 8,
+  },
 });
+
 
 export default BankProfileScreen;
