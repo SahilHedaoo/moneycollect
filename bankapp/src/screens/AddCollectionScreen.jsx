@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import AppBar from '../components/AppBar';
@@ -7,7 +7,7 @@ import { useRoute } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { Searchbar } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
+import { showToast } from '../ui/toast';
 
 const AddCollectionScreen = () => {
   const [users, setUsers] = useState([]);
@@ -22,7 +22,6 @@ const AddCollectionScreen = () => {
   const [collectionDate, setCollectionDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-
   const route = useRoute();
 
   useEffect(() => {
@@ -35,11 +34,10 @@ const AddCollectionScreen = () => {
         setUsers(res.data);
         setFilteredUsers(res.data);
       } catch (err) {
-        Alert.alert('Error', 'Failed to load users');
+        showToast('error', 'Failed to load users');
         console.error(err);
       }
     };
-
     fetchUsers();
   }, []);
 
@@ -51,8 +49,6 @@ const AddCollectionScreen = () => {
     setFilteredUsers(filtered);
     setShowDropdown(true); // Show dropdown on search
   };
-
-
   const handleUserSelect = (userId) => {
     const user = users.find((u) => u.id === userId);
     setSelectedUser(user);
@@ -61,7 +57,7 @@ const AddCollectionScreen = () => {
 
   const handleSubmit = async () => {
     if (!selectedUser || !amount) {
-      Alert.alert('Validation', 'Please fill in all required fields');
+      showToast('error', 'Please fill in all required fields');
       return;
     }
 
@@ -76,17 +72,17 @@ const AddCollectionScreen = () => {
           user_id: selectedUser.id,
           amount,
           frequency: selectedUser.package_name, // fixed and sent from backend
-           collected_at: collectionDate.toISOString(), 
+          collected_at: collectionDate.toISOString(), 
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      Alert.alert('Success', 'Collection recorded!');
+      showToast('success', 'Collection recorded!');
       setSelectedUser(null);
       setAmount('');
       setSearchTerm('');
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Could not save collection');
+      showToast('error', 'Could not save collection');
     } finally {
       setLoading(false);
     }
@@ -126,10 +122,9 @@ const AddCollectionScreen = () => {
             )}
 
             <Text style={styles.label}>Collection Date</Text>
-           <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
-  <Text style={styles.dateButtonText}>📅 {collectionDate.toDateString()}</Text>
-</TouchableOpacity>
-
+            <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateButton}>
+              <Text style={styles.dateButtonText}>📅 {collectionDate.toDateString()}</Text>
+            </TouchableOpacity>
 
             {showDatePicker && (
               <DateTimePicker
@@ -142,7 +137,6 @@ const AddCollectionScreen = () => {
                 }}
               />
             )}
-
 
             <Text style={styles.label}>Amount</Text>
             <TextInput
@@ -194,30 +188,28 @@ const styles = StyleSheet.create({
     padding: 7,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    backgroundColor:"#ffe"
+    backgroundColor: "#ffe"
   },
-
   dateButton: {
-  borderWidth: 1,
-  borderColor: '#ccc',
-  borderRadius: 8,
-  paddingVertical: 12,
-  paddingHorizontal: 10,
-  backgroundColor: '#f0f8ff',
-  marginBottom: 10,
-},
-
-dateButtonText: {
-  color: '#007bff',
-  fontWeight: '600',
-  fontSize: 16,
-},
-
-search: {
-  height:40,
-  textAlign:'center',justifyContent:'center',
-  backgroundColor:'#e7f3fd',
-}
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: '#f0f8ff',
+    marginBottom: 10,
+  },
+  dateButtonText: {
+    color: '#007bff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  search: {
+    height: 40,
+    textAlign: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#e7f3fd',
+  }
 });
 
 export default AddCollectionScreen;

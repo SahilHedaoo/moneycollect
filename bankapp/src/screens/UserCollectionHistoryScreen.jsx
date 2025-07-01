@@ -14,8 +14,15 @@ import api from '../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AppBar from '../components/AppBar';
 import { useRoute } from '@react-navigation/native';
+import { useContext } from 'react';
+import { SettingsContext } from '../context/SettingsContext';
+import { showToast } from '../ui/toast';
+
 
 const UserCollectionHistoryScreen = () => {
+
+  const { currency, symbol } = useContext(SettingsContext);
+
   const route = useRoute();
   const { userId, userName } = route.params;
   const { width } = useWindowDimensions();
@@ -49,7 +56,7 @@ const UserCollectionHistoryScreen = () => {
       calculateTotal(res.data);
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to fetch collection history');
+      showToast('error', 'Failed to fetch collection history');
     } finally {
       setLoading(false);
     }
@@ -61,7 +68,7 @@ const UserCollectionHistoryScreen = () => {
 
   const handleFilter = () => {
     if (!startDate || !endDate) {
-      Alert.alert('Error', 'Please select both start and end dates');
+     showToast('error', 'Please select both start and end dates');
       return;
     }
     fetchCollections();
@@ -69,7 +76,7 @@ const UserCollectionHistoryScreen = () => {
 
   const renderCollection = (item) => (
     <View key={item.id} style={styles.item}>
-      <Text style={styles.amount}>₹{item.amount}</Text>
+      <Text style={styles.amount}>{symbol}{item.amount}</Text>
       <Text style={styles.frequency}>{item.frequency.toUpperCase()}</Text>
       <Text style={styles.date}>
         {new Date(item.collected_at).toLocaleString()}
@@ -139,7 +146,7 @@ const UserCollectionHistoryScreen = () => {
               <Text style={{ textAlign: 'center', marginTop: 20 }}>No collections found.</Text>
             ) : (
               <>
-                <Text style={styles.total}>Total Collected: ₹{totalAmount}</Text>
+                <Text style={styles.total}>Total Collected: {symbol}{totalAmount}</Text>
                 {collections.map(renderCollection)}
               </>
             )}

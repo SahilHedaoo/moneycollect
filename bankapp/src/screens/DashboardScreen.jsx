@@ -12,6 +12,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { FAB } from 'react-native-paper';
+import { useContext } from 'react';
+import { SettingsContext } from '../context/SettingsContext';
+import { showToast } from '../ui/toast'; // ✅ add this import
 
 
 const DashboardScreen = () => {
@@ -20,7 +23,8 @@ const DashboardScreen = () => {
   const isFocused = useIsFocused();
   const navigation = useNavigation();
   const route = useRoute();
-
+ 
+  const { currency, symbol } = useContext(SettingsContext);
   useEffect(() => {
     if (isFocused) {
       fetchCollectionsAndCalculateSummary();
@@ -81,7 +85,7 @@ const DashboardScreen = () => {
       setSummary(summary);
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Failed to fetch collections');
+      showToast('error', 'Failed to fetch collections');
     }
   };
 
@@ -94,7 +98,7 @@ const DashboardScreen = () => {
     >
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{label}</Text>
-        <Text style={styles.cardValue}>₹{value.toFixed(2)}</Text>
+        <Text style={styles.cardValue}>{symbol}{value.toFixed(2)}</Text>
       </View>
     </TouchableHighlight>
   );

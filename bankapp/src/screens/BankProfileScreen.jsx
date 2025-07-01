@@ -5,6 +5,7 @@ import api from '../services/api';
 import AppBar from '../components/AppBar';
 import { useRoute } from '@react-navigation/native';
 import useFetch from '../hooks/useFetch';
+import { showToast } from '../ui/toast';
 
 const BankProfileScreen = ({ navigation }) => {
   const { data: users, loading: usersLoading } = useFetch('/users');
@@ -15,7 +16,7 @@ const BankProfileScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       const token = await AsyncStorage.getItem('token');
-      console.log('Token:', token); // 🔍 ADD THIS
+      console.log('Token:', token);
       try {
         const res = await api.get('/banks/profile', {
           headers: { Authorization: `Bearer ${token}` },
@@ -23,12 +24,13 @@ const BankProfileScreen = ({ navigation }) => {
         setBank(res.data);
       } catch (err) {
         console.error(err);
-        Alert.alert('Error', 'Failed to load bank profile');
+        showToast('error', 'Failed to load bank profile');
       }
     };
 
     fetchProfile();
   }, []);
+
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('token');

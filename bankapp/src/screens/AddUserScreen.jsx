@@ -5,7 +5,6 @@ import {
   TextInput,
   Button,
   StyleSheet,
-  Alert,
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -14,9 +13,9 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { Picker } from '@react-native-picker/picker';
-import AppBar from '../components/AppBar';
 import { useRoute } from '@react-navigation/native';
 import { CountryPicker } from 'react-native-country-codes-picker';
+import { showToast } from '../ui/toast';
 
 const AddUserScreen = () => {
   const [firstName, setFirstName] = useState('');
@@ -32,7 +31,7 @@ const AddUserScreen = () => {
 
   const handleAddUser = async () => {
     if (!firstName || !lastName || !phoneNumber || !packageName || !packageAmount) {
-      Alert.alert('Validation', 'Please fill all required fields');
+      showToast('error', 'Please fill all required fields');
       return;
     }
 
@@ -53,7 +52,7 @@ const AddUserScreen = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      Alert.alert('Success', 'User added successfully!');
+      showToast('success', 'User added successfully!');
       setFirstName('');
       setLastName('');
       setDialCode('+91');
@@ -63,7 +62,7 @@ const AddUserScreen = () => {
       setPackageAmount('');
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to add user');
+      showToast('error', 'Failed to add user');
     }
   };
 

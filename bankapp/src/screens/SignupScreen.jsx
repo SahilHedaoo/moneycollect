@@ -4,6 +4,7 @@ import InputField from '../components/InputField';
 import api from '../services/api';
 import { TouchableOpacity, isValidForm } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { showToast } from '../ui/toast';
 
 const SignupScreen = () => {
   const [bankName, setBankName] = useState('');
@@ -17,17 +18,17 @@ const SignupScreen = () => {
     const trimmedPassword = (password || '').trim();
 
     if (!trimmedBankName) {
-      Alert.alert('Validation Error', 'Bank name is required');
+     showToast('error', 'Bank name is required');
       return;
     }
 
     if (!trimmedEmail.includes('@') || !trimmedEmail.includes('.')) {
-      Alert.alert('Validation Error', 'Please enter a valid email address');
+      showToast('error', 'Please enter a valid email address');
       return;
     }
 
     if (trimmedPassword.length < 6) {
-      Alert.alert('Validation Error', 'Password must be at least 6 characters');
+     showToast('error', 'Password must be at least 6 characters');
       return;
     }
 
@@ -38,11 +39,11 @@ const SignupScreen = () => {
         password: trimmedPassword,
       });
 
-      Alert.alert('Success', 'Bank registered successfully');
+    showToast('success', 'Bank registered successfully');
       navigation.navigate('Login');
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', err.response?.data?.message || 'Registration failed');
+      showToast('error', err.response?.data?.message || 'Registration failed');
     }
   };
 

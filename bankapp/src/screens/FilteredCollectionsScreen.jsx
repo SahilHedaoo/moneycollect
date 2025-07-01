@@ -7,10 +7,13 @@ import useFetch from '../hooks/useFetch';
 import { useRoute } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native';
-
+import { useContext } from 'react';
+import { SettingsContext } from '../context/SettingsContext';
+import { showToast } from '../ui/toast';
 
 
 const FilteredCollectionsScreen = () => {
+  const { currency, symbol } = useContext(SettingsContext);
   const { data: usersData, loading: usersLoading } = useFetch('/users');
   const [users, setUsers] = useState([]);
   const [collections, setCollections] = useState([]);
@@ -29,7 +32,8 @@ const FilteredCollectionsScreen = () => {
         setUsers(res.data);
       } catch (err) {
         console.error(err);
-        Alert.alert('Error', 'Could not load users');
+        showToast('error', 'Could not load users');
+
       }
     };
 
@@ -42,7 +46,7 @@ const FilteredCollectionsScreen = () => {
         setCollections(res.data);
       } catch (err) {
         console.error(err);
-        Alert.alert('Error', 'Could not load collections');
+        showToast('error', 'Could not load collections');
       }
     };
 
@@ -105,6 +109,7 @@ const FilteredCollectionsScreen = () => {
             ...item,
             first_name: userData?.first_name || '',
             last_name: userData?.last_name || '',
+            phone: userData?.phone || '',
           };
         });
 
@@ -132,7 +137,7 @@ const FilteredCollectionsScreen = () => {
                 <Text style={styles.name}>
                   {item.first_name} {item.last_name}
                 </Text>
-                <Text style={styles.amount}>Amount: ₹{item.amount}</Text>
+                <Text style={styles.amount}>Amount: {symbol}{item.amount}</Text>
                 <Text>Date: {new Date(item.collected_at).toLocaleString()}</Text>
               </View>
             </TouchableOpacity>

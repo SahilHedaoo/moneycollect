@@ -13,6 +13,8 @@ import { Picker } from '@react-native-picker/picker';
 import api from '../services/api';
 import AppBar from '../components/AppBar';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { showToast } from '../ui/toast';
+
 
 const EditUserScreen = () => {
   const navigation = useNavigation();
@@ -27,7 +29,7 @@ const EditUserScreen = () => {
 
   const handleUpdate = async () => {
     if (!firstName || !lastName || !phone || !packageName || !packageAmount) {
-      Alert.alert('Validation', 'Please fill in all required fields');
+      showToast('error', 'Please fill in all required fields');
       return;
     }
 
@@ -48,11 +50,11 @@ const EditUserScreen = () => {
         }
       );
 
-      Alert.alert('Success', 'User updated successfully!');
+      showToast('success', 'User updated successfully!');
       navigation.goBack();
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to update user');
+      showToast('error', 'Failed to update user');
     }
   };
 

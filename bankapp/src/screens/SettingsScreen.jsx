@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from 'react-native-paper';
 import currencyCodes from 'currency-codes';
 import getSymbolFromCurrency from 'currency-symbol-map';
+import { SettingsContext } from '../context/SettingsContext';
+import { showToast } from '../ui/toast';
 
 const SettingsScreen = () => {
   const [country, setCountry] = useState(null);
@@ -22,15 +24,26 @@ const SettingsScreen = () => {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [currencySearch, setCurrencySearch] = useState('');
   const [showCurrencySearch, setShowCurrencySearch] = useState(false);
+  
+const { updateSettings } = useContext(SettingsContext);
 
-  const currencies = currencyCodes.codes().map(code => {
-    const data = currencyCodes.code(code);
-    return {
-      code,
-      currency: data?.currency,
-      symbol: getSymbolFromCurrency(code),
-    };
-  });
+ const currencies = currencyCodes.codes()
+  .map((code) => {
+    try {
+      const data = currencyCodes.code(code);
+      if (!data || !data.currency) return null;
+
+      return {
+        code,
+        currency: data.currency,
+        symbol: getSymbolFromCurrency(code) || '',
+      };
+    } catch (error) {
+      return null;
+    }
+  })
+  .filter(Boolean);
+
 
   const [filteredCurrencies, setFilteredCurrencies] = useState(currencies);
 
@@ -60,20 +73,18 @@ const SettingsScreen = () => {
     setShowCountryPicker(false);
   };
 
-  const handleSave = async () => {
-    if (!country || !currency) {
-      Alert.alert('Error', 'Please select both country and currency.');
-      return;
-    }
-    try {
-      await AsyncStorage.setItem('selectedCountry', JSON.stringify(country));
-      await AsyncStorage.setItem('selectedCurrency', currency);
-      await AsyncStorage.setItem('selectedSymbol', symbol);
-      Alert.alert('Saved', `Country: ${country.name.en}\nCurrency: ${currency} ${symbol}`);
-    } catch (e) {
-      Alert.alert('Error', 'Failed to save settings.');
-    }
-  };
+ const handleSave = async () => {
+  if (!country || !currency) {
+   showToast('error', 'Please select both country and currency.');
+    return;
+  }
+  try {
+    await updateSettings(currency, symbol, country);
+    showToast('success', `Country: ${country.name.en}\nCurrency: ${currency} ${symbol}`);
+  } catch (e) {
+    showToast('error', 'Failed to save settings.');
+  }
+};
 
   const onSearchCurrency = (text) => {
     setCurrencySearch(text);
@@ -213,13 +224,11 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingVertical: 10,
   },
-
   dropdown: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingBottom: 10, // Prevent last entry from being cut off
+    paddingBottom: 10, 
   },
-
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -241,7 +250,6 @@ const styles = StyleSheet.create({
     color: '#5E2CA5',
     padding: 4,
   },
-
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -262,7 +270,6 @@ const styles = StyleSheet.create({
     color: '#000',
     height: 44,
   },
-
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -288,6 +295,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
 
 export default SettingsScreen;

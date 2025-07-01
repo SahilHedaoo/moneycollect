@@ -5,22 +5,22 @@ import api from '../services/api';
 import AppBar from '../components/AppBar';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { Menu, IconButton } from 'react-native-paper';
-
+import { showToast } from '../ui/toast';
+import ConfirmModal from '../components/ConfirmModal'; 
 
 const UserListScreen = () => {
-
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
-
-
   const [menuVisible, setMenuVisible] = useState(null);
   const openMenu = (id) => setMenuVisible(id);
   const closeMenu = () => setMenuVisible(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
-  const route = useRoute();
+  const route = useRoute();const [selectedUserId, setSelectedUserId] = useState(null);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+
+
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -34,33 +34,33 @@ const UserListScreen = () => {
       setFilteredUsers(response.data);
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to fetch users');
+      showToast('error', 'Failed to fetch users');
+
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
+   const handleDelete = async () => {
     const token = await AsyncStorage.getItem('token');
+    try {
+      await api.delete(`/users/${selectedUserId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      showToast('success', 'User deleted successfully');
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Failed to delete user');
+    } finally {
+      setConfirmVisible(false);
+      setSelectedUserId(null);
+    }
+  };
 
-    Alert.alert('Confirm Delete', 'Are you sure you want to delete this user?', [
-      { text: 'Cancel' },
-      {
-        text: 'Delete',
-        onPress: async () => {
-          try {
-            await api.delete(`/users/${id}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            Alert.alert('Deleted', 'User deleted successfully');
-            fetchUsers(); // Refresh list
-          } catch (err) {
-            console.error(err);
-            Alert.alert('Error', 'Failed to delete user');
-          }
-        }
-      }
-    ]);
+  const askDelete = (id) => {
+    setSelectedUserId(id);
+    setConfirmVisible(true);
   };
 
   useEffect(() => {
@@ -99,7 +99,7 @@ const UserListScreen = () => {
           <Icon name="pencil" size={20} color="#007bff" />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => handleDelete(item.id)}>
+        <TouchableOpacity onPress={() => askDelete(item.id)}>
           <Icon name="trash" size={20} color="#ff4d4d" />
         </TouchableOpacity>
       </View>
@@ -136,7 +136,17 @@ const UserListScreen = () => {
           renderItem={renderItem}
           contentContainerStyle={styles.list}
         />
+        
       )}
+       <ConfirmModal
+        visible={confirmVisible}
+        message="Are you sure you want to delete this user?"
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setConfirmVisible(false);
+          setSelectedUserId(null);
+        }}
+      />
     </View>
   );
 };
