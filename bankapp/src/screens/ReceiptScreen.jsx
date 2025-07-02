@@ -1,5 +1,7 @@
+
+
 import React, { useRef, useContext } from 'react';
-import { View, Text, StyleSheet, Alert, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import Share from 'react-native-share';
 import { Button } from 'react-native-paper';
@@ -9,42 +11,40 @@ import { SettingsContext } from '../context/SettingsContext';
 import { showToast } from '../ui/toast';
 
 const ReceiptScreen = () => {
-  const { currency, symbol } = useContext(SettingsContext);
+  const { symbol, dialCode } = useContext(SettingsContext);
   const { params } = useRoute();
   const { item } = params || {};
   const viewShotRef = useRef();
 
   const handleShareImage = async () => {
-  try {
-    if (!item.phone) {
-      showToast('error', 'Phone number not available for WhatsApp.');
-      return;
+    try {
+      if (!item.phone) {
+        showToast('error', 'Phone number not available.');
+        return;
+      }
+      const rawPhone = item.phone.replace(/^\+?\d{1,4}/, '');
+
+      const formattedPhone = `${dialCode}${rawPhone}`.replace(/[^0-9]/g, '');
+
+      // Capture screenshot
+      const uri = await viewShotRef.current.capture();
+      const filePath = `${RNFS.CachesDirectoryPath}/receipt_${Date.now()}.png`;
+      await RNFS.copyFile(uri, filePath);
+
+      const shareOptions = {
+        url: `file://${filePath}`,
+        type: 'image/png',
+        social: Share.Social.WHATSAPP,
+        whatsAppNumber: formattedPhone,
+        failOnCancel: false,
+      };
+
+      await Share.shareSingle(shareOptions);
+    } catch (error) {
+      console.error('Error sharing receipt image:', error);
+      showToast('error', 'Could not share the receipt.');
     }
-
-    const uri = await viewShotRef.current.capture();
-    const filePath = `${RNFS.CachesDirectoryPath}/receipt_${Date.now()}.png`;
-    await RNFS.copyFile(uri, filePath);
-
-    let formattedPhone = item.phone.startsWith('+') ? item.phone : '+91' + item.phone;
-    formattedPhone = formattedPhone.replace(/[^0-9]/g, '');
-
-    const shareOptions = {
-      url: `file://${filePath}`,
-      type: 'image/png',
-      social: Share.Social.WHATSAPP,
-      whatsAppNumber: formattedPhone,
-      failOnCancel: false,
-    };
-
-    // ✅ Add slight delay to ensure file is ready and WhatsApp can load it
-    setTimeout(() => {
-      Share.shareSingle(shareOptions);
-    }, 800); // 800ms delay
-  } catch (error) {
-    console.error('Error sharing receipt image:', error);
-    showToast('error', 'Could not share the receipt image.');
-  }
-};
+  };
 
   if (!item) {
     return <Text style={styles.error}>No receipt data found.</Text>;
@@ -79,10 +79,18 @@ const ReceiptScreen = () => {
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Phone:</Text>
-          <Text style={styles.value}>{item.phone}</Text>
+          <Text style={styles.value}>
+            {`${dialCode}${item.phone.replace(/^\+?\d{1,4}/, '')}`}
+          </Text>
         </View>
+
+
         <View style={{ marginTop: 20, alignItems: 'center' }}>
-          <Button style={{ backgroundColor: '#25D366' }} mode="contained" onPress={handleShareImage}>
+          <Button
+            style={{ backgroundColor: '#25D366' }}
+            mode="contained"
+            onPress={handleShareImage}
+          >
             Share Receipt via WhatsApp
           </Button>
         </View>
@@ -135,5 +143,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
 export default ReceiptScreen;
+
+

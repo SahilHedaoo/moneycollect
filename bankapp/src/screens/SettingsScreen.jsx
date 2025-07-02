@@ -1,9 +1,9 @@
+
 import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Alert,
   TextInput,
   FlatList,
   TouchableOpacity,
@@ -24,26 +24,25 @@ const SettingsScreen = () => {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [currencySearch, setCurrencySearch] = useState('');
   const [showCurrencySearch, setShowCurrencySearch] = useState(false);
-  
-const { updateSettings } = useContext(SettingsContext);
 
- const currencies = currencyCodes.codes()
-  .map((code) => {
-    try {
-      const data = currencyCodes.code(code);
-      if (!data || !data.currency) return null;
+  const { updateSettings } = useContext(SettingsContext);
 
-      return {
-        code,
-        currency: data.currency,
-        symbol: getSymbolFromCurrency(code) || '',
-      };
-    } catch (error) {
-      return null;
-    }
-  })
-  .filter(Boolean);
-
+  const currencies = currencyCodes
+    .codes()
+    .map((code) => {
+      try {
+        const data = currencyCodes.code(code);
+        if (!data || !data.currency) return null;
+        return {
+          code,
+          currency: data.currency,
+          symbol: getSymbolFromCurrency(code) || '',
+        };
+      } catch (error) {
+        return null;
+      }
+    })
+    .filter(Boolean);
 
   const [filteredCurrencies, setFilteredCurrencies] = useState(currencies);
 
@@ -62,7 +61,7 @@ const { updateSettings } = useContext(SettingsContext);
 
   const handleCountrySelect = (item) => {
     setCountry(item);
-    const entry = currencies.find(c => c.code === item.code);
+    const entry = currencies.find((c) => c.code === item.code);
     if (entry) {
       setCurrency(entry.code);
       setSymbol(entry.symbol);
@@ -73,24 +72,25 @@ const { updateSettings } = useContext(SettingsContext);
     setShowCountryPicker(false);
   };
 
- const handleSave = async () => {
-  if (!country || !currency) {
-   showToast('error', 'Please select both country and currency.');
-    return;
-  }
-  try {
-    await updateSettings(currency, symbol, country);
-    showToast('success', `Country: ${country.name.en}\nCurrency: ${currency} ${symbol}`);
-  } catch (e) {
-    showToast('error', 'Failed to save settings.');
-  }
-};
+  const handleSave = async () => {
+    if (!country || !currency) {
+      showToast('error', 'Please select both country and currency.');
+      return;
+    }
+    try {
+      await updateSettings(currency, symbol, country);
+      showToast('success', `Country: ${country.name.en}\nCurrency: ${currency} ${symbol}`);
+    } catch (e) {
+      showToast('error', 'Failed to save settings.');
+    }
+  };
 
   const onSearchCurrency = (text) => {
     setCurrencySearch(text);
-    const filtered = currencies.filter((item) =>
-      item.code.toLowerCase().includes(text.toLowerCase()) ||
-      item.currency.toLowerCase().includes(text.toLowerCase())
+    const filtered = currencies.filter(
+      (item) =>
+        item.code.toLowerCase().includes(text.toLowerCase()) ||
+        item.currency.toLowerCase().includes(text.toLowerCase())
     );
     setFilteredCurrencies(filtered);
   };
@@ -125,16 +125,12 @@ const { updateSettings } = useContext(SettingsContext);
         </Text>
       )}
 
-      <TouchableOpacity
-        onPress={() => setShowCurrencySearch(true)}
-        style={styles.selectBox}
-      >
+      <TouchableOpacity onPress={() => setShowCurrencySearch(true)} style={styles.selectBox}>
         <Text style={styles.selectText}>
           {currency ? `Currency: ${currency} (${symbol})` : 'Select Currency'}
         </Text>
       </TouchableOpacity>
 
-      {/* Currency Modal Dropdown */}
       <Modal visible={showCurrencySearch} animationType="slide">
         <View style={styles.dropdown}>
           <View style={styles.modalHeader}>
@@ -159,10 +155,7 @@ const { updateSettings } = useContext(SettingsContext);
             data={filteredCurrencies}
             keyExtractor={(item) => item.code}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={() => handleCurrencySelect(item)}
-              >
+              <TouchableOpacity style={styles.dropdownItem} onPress={() => handleCurrencySelect(item)}>
                 <Text style={styles.currencySymbol}>{item.symbol}</Text>
                 <View>
                   <Text style={styles.dropdownText}>{item.code}</Text>
@@ -175,9 +168,7 @@ const { updateSettings } = useContext(SettingsContext);
         </View>
       </Modal>
 
-      {symbol !== '' && (
-        <Text style={styles.infoText}>Currency Symbol: {symbol}</Text>
-      )}
+      {symbol !== '' && <Text style={styles.infoText}>Currency Symbol: {symbol}</Text>}
 
       <Button mode="contained" onPress={handleSave} style={styles.button}>
         Save Settings
@@ -227,7 +218,7 @@ const styles = StyleSheet.create({
   dropdown: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingBottom: 10, 
+    paddingBottom: 10,
   },
   modalHeader: {
     flexDirection: 'row',
