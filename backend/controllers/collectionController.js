@@ -178,3 +178,42 @@ exports.getCollections = (req, res) => {
     return res.status(403).json({ error: 'Invalid token' });
   }
 };
+
+exports.getCollectionsByDateRange = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  const { start, end } = req.query;
+
+  if (!token) return res.status(401).json({ error: 'Token missing' });
+  if (!start || !end) return res.status(400).json({ error: 'Start and end dates required' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
+
+    const query = `
+      SELECT c.*, u.first_name, u.last_name 
+      FROM collections c
+      JOIN users u ON c.user_id = u.id
+      WHERE u.bank_id = ? AND DATE(c.collected_at) BETWEEN ? AND ?
+      ORDER BY c.collected_at DESC
+    `;
+
+    db.query(query, [bankId, start, end], (err, results) => {
+      if (err) {
+        console.error('DB error:', err);
+        return res.status(500).json({ error: 'Database query failed' });
+      }
+
+      const total = results.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+
+      res.status(200).json({
+        data: results,
+        total,
+      });
+    });
+  } catch (err) {
+    console.error('Token error:', err);
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+};
+

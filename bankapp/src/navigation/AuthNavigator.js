@@ -14,6 +14,7 @@ import FilteredCollectionsScreen from '../screens/FilteredCollectionsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import Wrapper from '../components/Wrapper';
 import ReceiptScreen from '../screens/ReceiptScreen';
+import ReportsScreen from '../screens/ReportsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -111,15 +112,22 @@ const AuthNavigator = () => {
         )}
       </Stack.Screen>
       <Stack.Screen name="Receipt">
-  {({ navigation, route }) => (
-    <Wrapper title="Receipt" route={route} navigation={navigation}>
-      <ReceiptScreen />
-    </Wrapper>
-  )}
-</Stack.Screen>
+        {({ navigation, route }) => (
+          <Wrapper title="Receipt" route={route} navigation={navigation}>
+            <ReceiptScreen />
+          </Wrapper>
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="Reports">
+        {({ navigation, route }) => (
+          <Wrapper title="Reports" route={route} navigation={navigation}>
+            <ReportsScreen />
+          </Wrapper>
+        )}
+      </Stack.Screen>
 
     </Stack.Navigator>
-    
+
   );
 };
 

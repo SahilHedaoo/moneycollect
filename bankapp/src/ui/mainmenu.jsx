@@ -67,6 +67,14 @@ const Mainmenu = () => {
                   closeMenu();
                 }}
               />
+              <Menu.Item
+                leadingIcon="chart-line"
+                title="Reports"
+                onPress={() => {
+                  navigation.navigate('Reports');
+                  closeMenu();
+                }}
+              />
               <Divider style={{ height: 1 }} />
               <Menu.Item
                 leadingIcon={() => <Icon source="power" size={24} color="red" />}

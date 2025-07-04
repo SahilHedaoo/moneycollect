@@ -130,9 +130,10 @@ const SettingsScreen = () => {
           {currency ? `Currency: ${currency} (${symbol})` : 'Select Currency'}
         </Text>
       </TouchableOpacity>
+<Modal visible={showCurrencySearch} animationType="slide" transparent>
+  <View style={styles.modalBackdrop}>
+    <View style={styles.currencyModal}>
 
-      <Modal visible={showCurrencySearch} animationType="slide">
-        <View style={styles.dropdown}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Select Currency</Text>
             <TouchableOpacity onPress={() => setShowCurrencySearch(false)}>
@@ -166,125 +167,166 @@ const SettingsScreen = () => {
             keyboardShouldPersistTaps="handled"
           />
         </View>
+        </View>
       </Modal>
 
       {symbol !== '' && <Text style={styles.infoText}>Currency Symbol: {symbol}</Text>}
 
-      <Button mode="contained" onPress={handleSave} style={styles.button}>
-        Save Settings
-      </Button>
+      <Button
+  mode="contained"
+  onPress={handleSave}
+  style={styles.button}
+  labelStyle={{ fontSize: 15, fontWeight: '600', color: '#fff' }}
+>
+  Save
+</Button>
+
+
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#F9FAFB',
     flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    backgroundColor: '#F9FAFB',
   },
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#333',
-    marginBottom: 20,
+    color: '#1F2937',
+    marginBottom: 24,
   },
   selectBox: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    marginBottom: 12,
-    backgroundColor: '#fff',
+    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
   },
   selectText: {
     fontSize: 16,
-    color: '#444',
-    lineHeight: 22,
+    color: '#374151',
   },
   infoText: {
-    marginBottom: 15,
     fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    color: '#6B7280',
+    marginBottom: 16,
   },
-  button: {
-    marginTop: 30,
-    backgroundColor: '#1E88E5',
-    borderRadius: 6,
-    paddingVertical: 10,
-  },
-  dropdown: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingBottom: 10,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#5E2CA5',
-    lineHeight: 24,
-  },
-  closeIcon: {
-    fontSize: 24,
-    color: '#5E2CA5',
-    padding: 4,
-  },
-  searchWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F3F4',
-    margin: 12,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-  },
-  searchIcon: {
-    fontSize: 18,
-    marginRight: 8,
-    color: '#777',
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 12,
-    color: '#000',
-    height: 44,
-  },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  dropdownText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#222',
-    lineHeight: 22,
-  },
-  currencyName: {
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
-  },
-  currencySymbol: {
-    fontSize: 22,
-    width: 40,
-    textAlign: 'center',
-  },
+button: {
+  marginTop: 16,
+  borderRadius: 8,
+  backgroundColor: '#2196F3',
+  alignSelf: 'stretch',
+  height: 48,
+  justifyContent: 'center',
+},
+
+
+  modalBackdrop: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.3)',
+  justifyContent: 'flex-end',
+},
+
+currencyModal: {
+  height: '75%',
+  backgroundColor: '#fff',
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  overflow: 'hidden',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 6,
+  elevation: 10,
+},
+
+dropdown: {
+  flex: 1,
+  paddingBottom: 10,
+},
+
+modalHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingVertical: 16,
+  paddingHorizontal: 20,
+  backgroundColor: '#F3F4F6',
+  borderBottomWidth: 1,
+  borderBottomColor: '#E5E7EB',
+},
+
+modalTitle: {
+  fontSize: 18,
+  fontWeight: '700',
+  color: '#1F2937',
+},
+
+closeIcon: {
+  fontSize: 24,
+  color: '#EF4444',
+  paddingVertical: 4, // ensures it's not clipped
+  paddingHorizontal: 8,
+  lineHeight: 10, // ensures proper vertical space
+},
+
+searchWrapper: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#F3F4F6',
+  borderRadius: 10,
+  marginHorizontal: 20,
+  marginVertical: 12,
+  paddingHorizontal: 12,
+},
+
+searchIcon: {
+  fontSize: 18,
+  marginRight: 8,
+  color: '#6B7280',
+},
+
+searchInput: {
+  flex: 1,
+  fontSize: 16,
+  color: '#111827',
+  height: 44,
+},
+
+dropdownItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingVertical: 14,
+  paddingHorizontal: 20,
+  borderBottomWidth: 1,
+  borderBottomColor: '#E5E7EB',
+},
+
+dropdownText: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#1F2937',
+},
+
+currencyName: {
+  fontSize: 13,
+  color: '#6B7280',
+},
+
+currencySymbol: {
+  fontSize: 22,
+  width: 40,
+  textAlign: 'center',
+  color: '#1E40AF',
+},
+
 });
+
 
 export default SettingsScreen;

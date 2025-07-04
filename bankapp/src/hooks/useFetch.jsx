@@ -19,7 +19,6 @@ export default function useFetch(apiEndpoint) {
         });
         setData(res.data);
       } catch (err) {
-        console.error(err);
         Alert.alert('Error', 'Could not load data');
       } finally {
         setLoading(false);
