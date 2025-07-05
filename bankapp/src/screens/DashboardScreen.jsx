@@ -14,8 +14,10 @@ import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native'
 import { FAB } from 'react-native-paper';
 import { useContext } from 'react';
 import { SettingsContext } from '../context/SettingsContext';
-import { showToast } from '../ui/toast'; // ✅ add this import
+import { showToast } from '../ui/toast'; // add this import
 
+import { ThemeContext } from '../context/themeContext';
+import { darkTheme, lightTheme } from '../styles/themes';
 
 const DashboardScreen = () => {
   const [summary, setSummary] = useState(null);
@@ -23,7 +25,9 @@ const DashboardScreen = () => {
   const isFocused = useIsFocused();
   const navigation = useNavigation();
   const route = useRoute();
- 
+  const { theme, toggleTheme } = useContext(ThemeContext);
+  const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
+
   const { currency, symbol } = useContext(SettingsContext);
   useEffect(() => {
     if (isFocused) {
@@ -104,15 +108,24 @@ const DashboardScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <ScrollView contentContainerStyle={[styles.subcontainer, { backgroundColor: currentTheme.card }]} showsVerticalScrollIndicator={false}>
         {summary && (
-          <View style={styles.cardContainer}>
+          <View style={[styles.cardContainer, { backgroundColor: currentTheme.input, color: currentTheme.text }]}>
             {renderCard('Today', summary.today, 'today')}
             {renderCard('Yesterday', summary.yesterday, 'yesterday')}
             {renderCard('This Week', summary.week, 'week')}
             {renderCard('This Month', summary.month, 'month')}
             {renderCard('This Year', summary.year, 'year')}
+            <TouchableHighlight
+              underlayColor="#ddd"
+              style={styles.cardTouchable}
+              onPress={() => navigation.navigate('CollectionReport')}
+            >
+              <View style={[styles.card, { backgroundColor: '#ffe0b2' }]}>
+                <Text style={[styles.cardTitle, { color: '#e65100', height: 50 }]}> Custom Collection Report</Text>
+              </View>
+            </TouchableHighlight>
           </View>
         )}
       </ScrollView>

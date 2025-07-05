@@ -75,6 +75,23 @@ const Mainmenu = () => {
                   closeMenu();
                 }}
               />
+               <Menu.Item
+                leadingIcon="chart-bar"
+                title="CollectionReport"
+                onPress={() => {
+                  navigation.navigate('CollectionReport');
+                  closeMenu();
+                }}
+              />
+              <Menu.Item
+                leadingIcon="play-circle"
+                title="Tutorials"
+                onPress={() => {
+                  navigation.navigate('Tutorials');
+                  closeMenu();
+                }}
+              />
+              
               <Divider style={{ height: 1 }} />
               <Menu.Item
                 leadingIcon={() => <Icon source="power" size={24} color="red" />}
@@ -93,11 +110,11 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-start',
-    alignItems: 'flex-end', // Align menu to the right
+    alignItems: 'flex-end', 
   },
   menuContainer: {
     backgroundColor: "#fff",
-    marginTop: 40, // Adjust based on Appbar height
+    marginTop: 40, 
     marginRight: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

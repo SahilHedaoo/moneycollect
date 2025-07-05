@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
@@ -12,11 +11,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import AppBar from '../components/AppBar';
 import { useRoute } from '@react-navigation/native';
 import { useContext } from 'react';
 import { SettingsContext } from '../context/SettingsContext';
 import { showToast } from '../ui/toast';
+import DateButton from '../components/DateButton';
 
 
 const UserCollectionHistoryScreen = () => {
@@ -89,24 +88,19 @@ const UserCollectionHistoryScreen = () => {
       <ScrollView contentContainerStyle={styles.subcontainer}>
         <Text style={styles.title}>{userName}'s Collection History</Text>
 
-        <View style={[styles.filterRow, { flexDirection: width < 400 ? 'column' : 'row' }]}>
-          <View style={styles.dateContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => setShowStart(true)}>
-              <Text style={styles.buttonText}>🗓 Start</Text>
-            </TouchableOpacity>
-            <Text style={styles.dateLabel}>
-              {startDate ? startDate.toDateString() : 'No date selected'}
-            </Text>
-          </View>
+          <View style={styles.filterRow}>
+          <DateButton
+            date={startDate || new Date()}
+            onPress={() => setShowStart(true)}
+            color="green"
+          />
 
-          <View style={styles.dateContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => setShowEnd(true)}>
-              <Text style={styles.buttonText}>🗓 End</Text>
-            </TouchableOpacity>
-            <Text style={styles.dateLabel}>
-              {endDate ? endDate.toDateString() : 'No date selected'}
-            </Text>
-          </View>
+
+          <DateButton
+            date={endDate || new Date()}
+            onPress={() => setShowEnd(true)}
+            color="red"
+          />
 
           <TouchableOpacity style={[styles.button, styles.filterButton]} onPress={handleFilter}>
             <Text style={[styles.buttonText, { color: '#fff' }]}>🔍 Filter</Text>

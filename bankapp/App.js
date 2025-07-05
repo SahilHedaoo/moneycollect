@@ -4,6 +4,7 @@ import { Appearance } from 'react-native';
 import AppContent from './src/AppContent';
 import { SettingsProvider } from './src/context/SettingsContext';
 import Toast from 'react-native-toast-message';
+import { ThemeProvider } from './src/context/themeContext';
 
 
 const App = () => {
@@ -12,12 +13,14 @@ const App = () => {
   }, [])
 
   return (
+    <ThemeProvider>
     <NavigationContainer>
       <SettingsProvider>
         <AppContent />
          <Toast />
       </SettingsProvider>
     </NavigationContainer>
+    </ThemeProvider>
   );
 };
 

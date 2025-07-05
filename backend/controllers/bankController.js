@@ -47,6 +47,7 @@ exports.loginBank = (req, res) => {
 
   db.query('SELECT * FROM banks WHERE email = ?', [email], async (err, results) => {
     console.log("err", err);
+    
     if (err || results.length === 0) return res.status(400).json({ message: 'Invalid credentials' });
 
     const bank = results[0];
@@ -75,5 +76,40 @@ exports.getProfile = (req, res) => {
     });
   } catch (err) {
     return res.status(403).json({ error: 'Invalid token' });
+  }
+};
+
+
+exports.changePassword = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: 'Token missing' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Old and new passwords are required' });
+    }
+
+    db.query('SELECT password FROM banks WHERE id = ?', [bankId], async (err, results) => {
+      if (err || results.length === 0) {
+        return res.status(404).json({ message: 'Bank not found' });
+      }
+
+      const isMatch = await bcrypt.compare(oldPassword, results[0].password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Old password is incorrect' });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      db.query('UPDATE banks SET password = ? WHERE id = ?', [hashedPassword, bankId], (err) => {
+        if (err) return res.status(500).json({ message: 'Error updating password' });
+        res.json({ message: 'Password changed successfully' });
+      });
+    });
+  } catch (err) {
+    return res.status(403).json({ message: 'Invalid token' });
   }
 };

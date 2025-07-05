@@ -1,22 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, Alert, ScrollView } from 'react-native';
+import React, { useEffect, useState, useContext } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  LayoutAnimation,
+  UIManager,
+  Platform,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
-import AppBar from '../components/AppBar';
-import { useRoute } from '@react-navigation/native';
 import useFetch from '../hooks/useFetch';
 import { showToast } from '../ui/toast';
+import { ThemeContext } from '../context/themeContext';
+import { darkTheme, lightTheme } from '../styles/themes';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const BankProfileScreen = ({ navigation }) => {
-  const { data: users, loading: usersLoading } = useFetch('/users');
-  const { data: collections, loading: collectionsLoading } = useFetch('/collections/get');
+  const { data: users } = useFetch('/users');
+  const { data: collections } = useFetch('/collections/get');
   const [bank, setBank] = useState(null);
-  const route = useRoute();
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const { theme, toggleTheme } = useContext(ThemeContext);
+  const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
 
   useEffect(() => {
     const fetchProfile = async () => {
       const token = await AsyncStorage.getItem('token');
-      console.log('Token:', token);
       try {
         const res = await api.get('/banks/profile', {
           headers: { Authorization: `Bearer ${token}` },
@@ -27,26 +48,130 @@ const BankProfileScreen = ({ navigation }) => {
         showToast('error', 'Failed to load bank profile');
       }
     };
-
     fetchProfile();
   }, []);
 
+  const togglePasswordForm = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShowPasswordForm(!showPasswordForm);
+  };
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem('token');
-    navigation.replace('Login'); // Send back to login
+  const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return Alert.alert('Validation Error', 'Please fill in all fields');
+    }
+
+    if (newPassword !== confirmPassword) {
+      return Alert.alert('Validation Error', 'New passwords do not match');
+    }
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await api.post(
+        '/banks/change-password',
+        { oldPassword, newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      showToast('success', 'Password changed successfully');
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowPasswordForm(false);
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', error?.response?.data?.message || 'Failed to change password');
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.subcontainer} showsVerticalScrollIndicator={false}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+      <ScrollView
+        contentContainerStyle={[styles.subcontainer, { backgroundColor: currentTheme.card }]}
+        showsVerticalScrollIndicator={false}
+      >
         {bank ? (
           <>
-            <Text style={styles.label}>Name: {bank.name}</Text>
-            <Text style={styles.label}>Email: {bank.email}</Text>
+            <Text style={[styles.label, { backgroundColor: currentTheme.background, color: currentTheme.text }]}>
+              Name: {bank.name}
+            </Text>
+            <Text style={[styles.label, { backgroundColor: currentTheme.background, color: currentTheme.text }]}>
+              Email: {bank.email}
+            </Text>
           </>
         ) : (
-          <Text>Loading...</Text>
+          <Text style={{ color: currentTheme.text }}>Loading...</Text>
+        )}
+
+        <TouchableOpacity
+          style={[styles.toggleBtn, { backgroundColor: currentTheme.primary }]}
+          onPress={togglePasswordForm}
+        >
+          <Text style={styles.toggleBtnText}>
+            {showPasswordForm ? 'Cancel Change Password' : 'Change Password'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* 🔄 Theme Toggle Button */}
+        <TouchableOpacity
+          style={[styles.toggleBtn, { backgroundColor: theme === 'dark' ? '#444' : '#ccc', marginTop: 12 }]}
+          onPress={toggleTheme}
+        >
+          <Text style={[styles.toggleBtnText, { color: theme === 'dark' ? '#fff' : '#000' }]}>
+            {theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          </Text>
+        </TouchableOpacity>
+
+        {showPasswordForm && (
+          <View style={styles.formSection}>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: currentTheme.input,
+                  color: currentTheme.text,
+                  borderColor: currentTheme.border,
+                },
+              ]}
+              secureTextEntry
+              placeholder="Old Password"
+              placeholderTextColor="#888"
+              value={oldPassword}
+              onChangeText={setOldPassword}
+            />
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: currentTheme.input,
+                  color: currentTheme.text,
+                  borderColor: currentTheme.border,
+                },
+              ]}
+              secureTextEntry
+              placeholder="New Password"
+              placeholderTextColor="#888"
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: currentTheme.input,
+                  color: currentTheme.text,
+                  borderColor: currentTheme.border,
+                },
+              ]}
+              secureTextEntry
+              placeholder="Confirm New Password"
+              placeholderTextColor="#888"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity style={styles.button} onPress={handleChangePassword}>
+              <Text style={styles.buttonText}>Update Password</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </ScrollView>
     </View>
@@ -56,36 +181,48 @@ const BankProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f8fa', // Light gray background
   },
   subcontainer: {
     flexGrow: 1,
     padding: 24,
-    backgroundColor: '#fff',
     margin: 16,
     borderRadius: 12,
-    elevation: 4, // Android shadow
-    shadowColor: '#000', // iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
-    textAlign: 'center',
+    elevation: 3,
   },
   label: {
     fontSize: 18,
     marginBottom: 12,
-    color: '#444',
-    backgroundColor: '#eef2f5',
     padding: 12,
     borderRadius: 8,
   },
+  toggleBtn: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  toggleBtnText: {
+    fontWeight: 'bold',
+  },
+  formSection: {
+    marginTop: 20,
+  },
+  input: {
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  button: {
+    backgroundColor: '#28a745',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
 });
-
 
 export default BankProfileScreen;

@@ -15,6 +15,10 @@ import SettingsScreen from '../screens/SettingsScreen';
 import Wrapper from '../components/Wrapper';
 import ReceiptScreen from '../screens/ReceiptScreen';
 import ReportsScreen from '../screens/ReportsScreen';
+import UserReportScreen from '../screens/UserReportScreen';
+import TutorialsScreen from '../screens/TutorialsScreen';
+import VideoPlayerScreen from '../screens/VideoPlayerScreen';
+import CollectionReportScreen from '../screens/CollectionReportScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -122,6 +126,34 @@ const AuthNavigator = () => {
         {({ navigation, route }) => (
           <Wrapper title="Reports" route={route} navigation={navigation}>
             <ReportsScreen />
+          </Wrapper>
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="UserReport">
+        {({ navigation, route }) => (
+          <Wrapper title="UserReport" route={route} navigation={navigation}>
+            <UserReportScreen />
+          </Wrapper>
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="Tutorials">
+        {({ navigation, route }) => (
+          <Wrapper title="Tutorials" route={route} navigation={navigation}>
+            <TutorialsScreen />
+          </Wrapper>
+        )}
+      </Stack.Screen>
+       <Stack.Screen name="VideoPlayer">
+        {({ navigation, route }) => (
+          <Wrapper title="VideoPlayer" route={route} navigation={navigation}>
+            <VideoPlayerScreen />
+          </Wrapper>
+        )}
+      </Stack.Screen>
+       <Stack.Screen name="CollectionReport">
+        {({ navigation, route }) => (
+          <Wrapper title="CollectionReport" route={route} navigation={navigation}>
+            <CollectionReportScreen />
           </Wrapper>
         )}
       </Stack.Screen>

@@ -16,8 +16,12 @@ import Share from 'react-native-share';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import Toast from 'react-native-toast-message';
+import { FAB } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+import DateButton from '../components/DateButton';
 
 const ReportsScreen = () => {
+  const navigation = useNavigation();
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -30,11 +34,11 @@ const ReportsScreen = () => {
 
   const downloadReport = async () => {
     if (!startDate || !endDate) {
-     Toast.show({
-  type: 'error',
-  text1: 'Missing Dates',
-  text2: 'Please select both start and end dates',
-});
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Dates',
+        text2: 'Please select both start and end dates',
+      });
 
       return;
     }
@@ -54,10 +58,10 @@ const ReportsScreen = () => {
 
       if (!collections.length) {
         Toast.show({
-  type: 'info',
-  text1: 'No Data',
-  text2: 'No collections found for selected date range.',
-});
+          type: 'info',
+          text1: 'No Data',
+          text2: 'No collections found for selected date range.',
+        });
 
         return;
       }
@@ -101,18 +105,18 @@ const ReportsScreen = () => {
       setLastFilePath(filePath);
 
       Toast.show({
-  type: 'success',
-  text1: 'Report Saved',
-  text2: 'Excel file saved successfully!',
-});
+        type: 'success',
+        text1: 'Report Saved',
+        text2: 'Excel file saved successfully!',
+      });
 
     } catch (err) {
       console.log('Download error:', err);
-     Toast.show({
-  type: 'error',
-  text1: 'Error',
-  text2: 'Failed to generate report.',
-});
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to generate report.',
+      });
 
     } finally {
       setLoading(false);
@@ -121,11 +125,11 @@ const ReportsScreen = () => {
 
   const shareReport = async () => {
     if (!lastFilePath) {
-     Toast.show({
-  type: 'error',
-  text1: 'No Report',
-  text2: 'Please download the report first.',
-});
+      Toast.show({
+        type: 'error',
+        text1: 'No Report',
+        text2: 'Please download the report first.',
+      });
 
       return;
     }
@@ -146,26 +150,20 @@ const ReportsScreen = () => {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.subcontainer}>
-        <Text style={styles.title}>Download Report</Text>
 
-        <View style={[styles.filterRow, { flexDirection: width < 400 ? 'column' : 'row' }]}>
-          <View style={styles.dateContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => setShowStartPicker(true)}>
-              <Text style={styles.buttonText}>🗓 Start</Text>
-            </TouchableOpacity>
-            <Text style={styles.dateLabel}>
-              {startDate ? startDate.toDateString() : 'No date selected'}
-            </Text>
-          </View>
+        <View style={styles.filterRow}>
+          <DateButton
+            date={startDate || new Date()}
+            onPress={() => setShowStartPicker(true)}
+            color="green"
+          />
 
-          <View style={styles.dateContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => setShowEndPicker(true)}>
-              <Text style={styles.buttonText}>🗓 End</Text>
-            </TouchableOpacity>
-            <Text style={styles.dateLabel}>
-              {endDate ? endDate.toDateString() : 'No date selected'}
-            </Text>
-          </View>
+          <DateButton
+            date={endDate || new Date()}
+            onPress={() => setShowEndPicker(true)}
+            color="red"
+          />
+
 
           <TouchableOpacity
             style={[styles.button, styles.filterButton]}
@@ -174,14 +172,15 @@ const ReportsScreen = () => {
           >
             <Text style={[styles.buttonText, { color: '#fff' }]}>📥 Download</Text>
           </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
+           <TouchableOpacity
           style={[styles.button, styles.shareButton]}
           onPress={shareReport}
         >
           <Text style={[styles.buttonText, { color: '#fff' }]}>📤 Share Report</Text>
         </TouchableOpacity>
+        </View>
+
+       
 
         {showStartPicker && (
           <DateTimePicker
@@ -211,6 +210,12 @@ const ReportsScreen = () => {
           <ActivityIndicator size="large" color="#1e88e5" style={{ marginTop: 20 }} />
         )}
       </ScrollView>
+      <FAB
+        style={styles.fab}
+        icon="plus"
+        color="white"
+        onPress={() => navigation.navigate('UserReport')}
+      />
     </View>
   );
 };
@@ -267,9 +272,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 6,
     elevation: 2,
+    width: '100%',
   },
   filterButton: {
-    backgroundColor: '#1e88e5',
+    backgroundColor: '#2196F3',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 6,
@@ -287,5 +293,14 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: 'bold',
     fontSize: 14,
+    textAlign: 'center',
+    justifyContent:'center'
+  },
+  fab: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#1e88e5',
+    margin: 16
   },
 });
