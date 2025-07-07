@@ -12,6 +12,10 @@ import api from '../services/api';
 import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateButton from '../components/DateButton';
+import Icon from 'react-native-vector-icons/Feather';
+import { useNavigation } from '@react-navigation/native';
+
+
 const CollectionReportScreen = () => {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -20,6 +24,8 @@ const CollectionReportScreen = () => {
   const [collections, setCollections] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
+
 
   const fetchCollectionData = async () => {
     try {
@@ -46,21 +52,13 @@ const CollectionReportScreen = () => {
       setLoading(false);
     }
   };
-
+  
   const renderItem = ({ item }) => (
     <View style={styles.itemCard}>
-      <View style={styles.row}>
-        <Text style={styles.label}>User: </Text>
-        <Text style={styles.value}>{item.first_name} {item.last_name}</Text>
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Amount: </Text>
-        <Text style={styles.value}>₹{item.amount}</Text>
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Date: </Text>
-        <Text style={styles.value}>{moment(item.collected_at).format('MMM D, YYYY')}</Text>
-      </View>
+      <Text style={styles.value}>{moment(item.collected_at).format('MMM D, YYYY')}</Text>
+      <Text style={styles.value}>{item.first_name} {item.last_name}</Text>
+      <Text style={styles.value}>{item.amount.toFixed(2)}</Text>
+      <Icon name="eye" size={20} color="#ccc" />
     </View>
   );
 
@@ -124,9 +122,20 @@ const CollectionReportScreen = () => {
         data={collections}
         keyExtractor={(item, index) => index.toString()}
         renderItem={renderItem}
-        ListHeaderComponent={Header}
+        ListHeaderComponent={() => (
+          <>
+            <Header />
+            <View style={styles.headerRow}>
+              <Text style={styles.headerCell}>Date</Text>
+              <Text style={styles.headerCell}>User</Text>
+              <Text style={styles.headerCell}>Amount</Text>
+              <Text style={styles.headerCell}>View</Text>
+            </View>
+          </>
+        )}
         contentContainerStyle={styles.contentContainer}
       />
+
     </View>
   );
 };
@@ -176,26 +185,45 @@ const styles = StyleSheet.create({
     color: '#1A237E',
     fontWeight: 'bold',
   },
-itemCard: {
-  backgroundColor: '#f8f8f8',
-  padding: 14,
-  borderRadius: 8,
-  borderWidth: 1,
-  borderColor: '#ccc',
-  marginBottom: 12,
-},
-
+  itemCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderColor: '#2e2e3e',
+    borderWidth: 1,
+  },
+  label: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  value: {
+    color: '#',
+    fontSize: 14,
+  },
   row: {
     flexDirection: 'row',
     marginBottom: 4,
   },
-label: {
-  fontWeight: '600',
-  color: '#444',
-  marginBottom: 4,
-},
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#2196F3',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  headerCell: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
 
-value: {
-  color: '#666',
-},
+
 });
