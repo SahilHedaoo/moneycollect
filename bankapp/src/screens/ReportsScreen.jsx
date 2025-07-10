@@ -19,8 +19,15 @@ import Toast from 'react-native-toast-message';
 import { FAB } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import DateButton from '../components/DateButton';
+import { useContext } from 'react';
+import { ThemeContext } from '../context/themeContext';
+import { lightTheme, darkTheme } from '../styles/themes';
+
 
 const ReportsScreen = () => {
+  const { theme } = useContext(ThemeContext);
+const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
+
   const navigation = useNavigation();
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -149,7 +156,8 @@ const ReportsScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.subcontainer}>
+   <ScrollView contentContainerStyle={[styles.subcontainer, { backgroundColor: selectedTheme.background }]}>
+
 
         <View style={styles.filterRow}>
           <DateButton
@@ -170,13 +178,15 @@ const ReportsScreen = () => {
             onPress={downloadReport}
             disabled={loading}
           >
-            <Text style={[styles.buttonText, { color: '#fff' }]}>📥 Download</Text>
+          <Text style={[styles.buttonText, { color: selectedTheme.text }]}>📥 Download</Text>
+
           </TouchableOpacity>
            <TouchableOpacity
           style={[styles.button, styles.shareButton]}
           onPress={shareReport}
         >
-          <Text style={[styles.buttonText, { color: '#fff' }]}>📤 Share Report</Text>
+          <Text style={[styles.buttonText, { color: selectedTheme.text }]}>📤 Share Report</Text>
+
         </TouchableOpacity>
         </View>
 
@@ -207,15 +217,17 @@ const ReportsScreen = () => {
         )}
 
         {loading && (
-          <ActivityIndicator size="large" color="#1e88e5" style={{ marginTop: 20 }} />
+         <ActivityIndicator size="large" color={selectedTheme.primary} style={{ marginTop: 20 }} />
+
         )}
       </ScrollView>
-      <FAB
-        style={styles.fab}
-        icon="plus"
-        color="white"
-        onPress={() => navigation.navigate('UserReport')}
-      />
+     <FAB
+  style={[styles.fab, { backgroundColor: selectedTheme.primary }]}
+  icon="plus"
+  color={selectedTheme.text}
+  onPress={() => navigation.navigate('UserReport')}
+/>
+
     </View>
   );
 };
@@ -290,11 +302,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   buttonText: {
-    color: '#000',
     fontWeight: 'bold',
-    fontSize: 14,
-    textAlign: 'center',
-    justifyContent:'center'
+  fontSize: 14,
+  textAlign: 'center',
   },
   fab: {
     position: 'absolute',

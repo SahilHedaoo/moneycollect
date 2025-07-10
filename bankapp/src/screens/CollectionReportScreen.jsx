@@ -14,9 +14,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateButton from '../components/DateButton';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
-
+import { useContext } from 'react';
+import { ThemeContext } from '../context/themeContext';
+import { lightTheme, darkTheme } from '../styles/themes';
 
 const CollectionReportScreen = () => {
+  const { theme } = useContext(ThemeContext);
+const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
+
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -117,7 +122,8 @@ const CollectionReportScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+   <View style={[styles.container, { backgroundColor: selectedTheme.background }]}>
+
       <FlatList
         data={collections}
         keyExtractor={(item, index) => index.toString()}

@@ -217,3 +217,40 @@ exports.getCollectionsByDateRange = (req, res) => {
   }
 };
 
+exports.getTopUsers = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Token missing' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
+
+    const query = `
+      SELECT u.first_name, u.last_name, SUM(c.amount) AS total
+      FROM collections c
+      JOIN users u ON c.user_id = u.id
+      WHERE u.bank_id = ?
+      GROUP BY c.user_id
+      ORDER BY total DESC
+      LIMIT 10
+    `;
+
+    db.query(query, [bankId], (err, results) => {
+      if (err) {
+        console.error('DB Error:', err);
+        return res.status(500).json({ error: 'Failed to fetch top users' });
+      }
+
+      // Optional: Combine first and last name for display
+      const formatted = results.map(user => ({
+        name: `${user.first_name} ${user.last_name}`,
+        total: user.total
+      }));
+
+      res.status(200).json(formatted);
+    });
+  } catch (err) {
+    console.error('Token Error:', err);
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+};

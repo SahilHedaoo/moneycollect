@@ -6,7 +6,7 @@ export const lightTheme = {
 };
 
 export const darkTheme = {
-  background: '#333333',
+  background: 'black',
   text: '#FFFFFF',
   card: '#1E1E1E',
   primary: '#2980b9',

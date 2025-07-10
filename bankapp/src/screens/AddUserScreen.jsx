@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,10 @@ import { Picker } from '@react-native-picker/picker';
 import { useRoute } from '@react-navigation/native';
 import { CountryPicker } from 'react-native-country-codes-picker';
 import { showToast } from '../ui/toast';
+import { formatPhoneNumber } from '../utils/phoneUtils';
+
+import { ThemeContext } from '../context/themeContext';
+import { lightTheme, darkTheme } from '../styles/themes';
 
 const AddUserScreen = () => {
   const [firstName, setFirstName] = useState('');
@@ -27,6 +31,9 @@ const AddUserScreen = () => {
   const [packageAmount, setPackageAmount] = useState('');
   const [show, setShow] = useState(false);
 
+  const { theme } = useContext(ThemeContext);
+  const selectedTheme = theme === 'light' ? lightTheme : darkTheme;
+
   const route = useRoute();
 
   const handleAddUser = async () => {
@@ -35,7 +42,6 @@ const AddUserScreen = () => {
       return;
     }
 
-    const phone = `${dialCode}${phoneNumber}`;
     const token = await AsyncStorage.getItem('token');
 
     try {
@@ -44,7 +50,8 @@ const AddUserScreen = () => {
         {
           first_name: firstName,
           last_name: lastName,
-          phone,
+          dial_code: dialCode,
+          phone: phoneNumber,
           email,
           package_name: packageName,
           package_amount: parseFloat(packageAmount),
@@ -55,7 +62,7 @@ const AddUserScreen = () => {
       showToast('success', 'User added successfully!');
       setFirstName('');
       setLastName('');
-      setDialCode('+91');
+      setDialCode('');
       setPhoneNumber('');
       setEmail('');
       setPackageName('Daily');
@@ -66,30 +73,38 @@ const AddUserScreen = () => {
     }
   };
 
+  const handlePhoneChange = (text) => {
+    const numeric = text.replace(/[^0-9]/g, '');
+    const cleaned = numeric.replace(new RegExp(`^${dialCode.replace('+', '')}`), '');
+    setPhoneNumber(cleaned);
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: selectedTheme.background }]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.label}>First Name *</Text>
+          <Text style={[styles.label, { color: selectedTheme.text }]}>First Name *</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter first name"
+            placeholderTextColor="#999"
             value={firstName}
             onChangeText={setFirstName}
           />
 
-          <Text style={styles.label}>Last Name *</Text>
+          <Text style={[styles.label, { color: selectedTheme.text }]}>Last Name *</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter last name"
+            placeholderTextColor="#999"
             value={lastName}
             onChangeText={setLastName}
           />
 
-          <Text style={styles.label}>Phone Number *</Text>
+          <Text style={[styles.label, { color: selectedTheme.text }]}>Phone Number *</Text>
           <View style={styles.phoneContainer}>
             <TouchableOpacity style={styles.dialCodeBox} onPress={() => setShow(true)}>
               <Text style={styles.dialCodeText}>{dialCode}</Text>
@@ -97,9 +112,10 @@ const AddUserScreen = () => {
             <TextInput
               style={styles.phoneInput}
               placeholder="Phone number"
+              placeholderTextColor="#999"
               keyboardType="phone-pad"
               value={phoneNumber}
-              onChangeText={setPhoneNumber}
+              onChangeText={handlePhoneChange}
             />
           </View>
 
@@ -112,22 +128,21 @@ const AddUserScreen = () => {
             onBackdropPress={() => setShow(false)}
             lang="en"
             style={{
-              modal: {
-                height: '75%',
-              },
+              modal: { height: '75%' },
             }}
           />
 
-          <Text style={styles.label}>Email (optional)</Text>
+          <Text style={[styles.label, { color: selectedTheme.text }]}>Email (optional)</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter email"
+            placeholderTextColor="#999"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
           />
 
-          <Text style={styles.label}>Package Name *</Text>
+          <Text style={[styles.label, { color: selectedTheme.text }]}>Package Name *</Text>
           <View style={styles.pickerWrapper}>
             <Picker
               selectedValue={packageName}
@@ -141,10 +156,11 @@ const AddUserScreen = () => {
             </Picker>
           </View>
 
-          <Text style={styles.label}>Package Amount *</Text>
+          <Text style={[styles.label, { color: selectedTheme.text }]}>Package Amount *</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter amount"
+            placeholderTextColor="#999"
             value={packageAmount}
             onChangeText={setPackageAmount}
             keyboardType="numeric"
@@ -162,7 +178,6 @@ const AddUserScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafe',
   },
   content: {
     flexGrow: 1,
@@ -172,7 +187,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontWeight: '600',
     fontSize: 14,
-    color: '#333',
   },
   input: {
     borderWidth: 1,
@@ -183,6 +197,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontSize: 15,
     backgroundColor: '#fff',
+    color: '#000',
   },
   phoneContainer: {
     flexDirection: 'row',
@@ -210,6 +225,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 12,
     fontSize: 15,
+    color: '#000',
   },
   pickerWrapper: {
     borderWidth: 1,

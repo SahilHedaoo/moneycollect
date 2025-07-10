@@ -3,7 +3,7 @@ import api from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 
-export default function useFetch(apiEndpoint) {
+export default function useFetch(apiEndpoint, refreshKey) {
   const [data, setData] = useState(null); // Fix: Use array destructuring
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +26,7 @@ export default function useFetch(apiEndpoint) {
     };
 
     fetchData();
-  }, [apiEndpoint]); // Dependency: apiEndpoint passed to the hook
+  }, [apiEndpoint, refreshKey]); 
 
   return { data, loading };
 }

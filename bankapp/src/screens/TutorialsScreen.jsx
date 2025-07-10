@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { ThemeContext } from '../context/themeContext';
+import { lightTheme, darkTheme } from '../styles/themes';
 
 const videoList = [
   { id: '1', title: 'How to Add Users', videoId: 'tBe5Ajc6BzE' },
@@ -10,20 +12,25 @@ const videoList = [
 
 const TutorialsScreen = () => {
   const navigation = useNavigation();
+  const { theme } = useContext(ThemeContext);
+  const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
 
   const handleCardPress = (video) => {
     navigation.navigate('VideoPlayer', { video });
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: selectedTheme.background }]}>
       <FlatList
         data={videoList}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} onPress={() => handleCardPress(item)}>
-            <Text style={styles.title}>{item.title}</Text>
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: selectedTheme.card }]}
+            onPress={() => handleCardPress(item)}
+          >
+            <Text style={[styles.title, { color: selectedTheme.text }]}>{item.title}</Text>
           </TouchableOpacity>
         )}
       />
@@ -39,7 +46,6 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   card: {
-    backgroundColor: '#e0e0e0',
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,

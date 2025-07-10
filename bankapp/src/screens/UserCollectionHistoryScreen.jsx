@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -12,15 +12,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRoute } from '@react-navigation/native';
-import { useContext } from 'react';
 import { SettingsContext } from '../context/SettingsContext';
+import { ThemeContext } from '../context/themeContext';
+import { lightTheme, darkTheme } from '../styles/themes';
 import { showToast } from '../ui/toast';
 import DateButton from '../components/DateButton';
 
-
 const UserCollectionHistoryScreen = () => {
-
   const { currency, symbol } = useContext(SettingsContext);
+  const { theme } = useContext(ThemeContext);
+  const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
 
   const route = useRoute();
   const { userId, userName } = route.params;
@@ -67,46 +68,42 @@ const UserCollectionHistoryScreen = () => {
 
   const handleFilter = () => {
     if (!startDate || !endDate) {
-     showToast('error', 'Please select both start and end dates');
+      showToast('error', 'Please select both start and end dates');
       return;
     }
     fetchCollections();
   };
 
   const renderCollection = (item) => (
-    <View key={item.id} style={styles.item}>
-      <Text style={styles.amount}>{symbol}{item.amount}</Text>
-      <Text style={styles.frequency}>{item.frequency.toUpperCase()}</Text>
-      <Text style={styles.date}>
+    <View key={item.id} style={[styles.item, { backgroundColor: selectedTheme.card, borderColor: selectedTheme.text + '33' }]}>
+      <Text style={[styles.amount, { color: selectedTheme.primary }]}>{symbol}{item.amount}</Text>
+      <Text style={[styles.frequency, { color: selectedTheme.text }]}>{item.frequency.toUpperCase()}</Text>
+      <Text style={[styles.date, { color: selectedTheme.text + '99' }]}>
         {new Date(item.collected_at).toLocaleString()}
       </Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.subcontainer}>
-        <Text style={styles.title}>{userName}'s Collection History</Text>
+    <View style={[styles.container, { backgroundColor: selectedTheme.background }]}>
+      <ScrollView contentContainerStyle={[styles.subcontainer, { backgroundColor: selectedTheme.background }]}>
+        <Text style={[styles.title, { color: selectedTheme.text }]}>{userName}'s Collection History</Text>
 
-          <View style={styles.filterRow}>
+        <View style={styles.filterRow}>
           <DateButton
             date={startDate || new Date()}
             onPress={() => setShowStart(true)}
             color="green"
           />
-
-
           <DateButton
             date={endDate || new Date()}
             onPress={() => setShowEnd(true)}
             color="red"
           />
-
           <TouchableOpacity style={[styles.button, styles.filterButton]} onPress={handleFilter}>
             <Text style={[styles.buttonText, { color: '#fff' }]}>🔍 Filter</Text>
           </TouchableOpacity>
         </View>
-
 
         {showStart && (
           <DateTimePicker
@@ -119,7 +116,6 @@ const UserCollectionHistoryScreen = () => {
             }}
           />
         )}
-
         {showEnd && (
           <DateTimePicker
             value={endDate || new Date()}
@@ -133,14 +129,18 @@ const UserCollectionHistoryScreen = () => {
         )}
 
         {loading ? (
-          <ActivityIndicator size="large" color="#1e88e5" />
+          <ActivityIndicator size="large" color={selectedTheme.primary} />
         ) : (
           <>
             {collections.length === 0 ? (
-              <Text style={{ textAlign: 'center', marginTop: 20 }}>No collections found.</Text>
+              <Text style={{ textAlign: 'center', marginTop: 20, color: selectedTheme.text + 'AA' }}>
+                No collections found.
+              </Text>
             ) : (
               <>
-                <Text style={styles.total}>Total Collected: {symbol}{totalAmount}</Text>
+                <Text style={[styles.total, { color: 'green' }]}>
+                  Total Collected: {symbol}{totalAmount}
+                </Text>
                 {collections.map(renderCollection)}
               </>
             )}
@@ -153,20 +153,16 @@ const UserCollectionHistoryScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-
   subcontainer: {
     padding: 16,
-    backgroundColor: '#fff',
     flexGrow: 1,
   },
-
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
   },
-
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -175,41 +171,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     gap: 12,
   },
-
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fafafa',
-    padding: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    flex: 1,
-    maxWidth: '48%',
-    gap: 6,
-  },
-
-  dateLabel: {
-    fontSize: 11,
-    color: '#555',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    flex: 1,
-    textAlign: 'center',
-  },
-
   button: {
-    backgroundColor: '#e3f2fd',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
     elevation: 2,
   },
-
   filterButton: {
     backgroundColor: '#1e88e5',
     paddingVertical: 10,
@@ -217,45 +184,32 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignSelf: 'center',
   },
-
   buttonText: {
-    color: '#000',
     fontWeight: 'bold',
     fontSize: 14,
   },
-
   item: {
-    backgroundColor: '#f8f8f8',
     padding: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ccc',
     marginBottom: 12,
   },
-
   amount: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e88e5',
     paddingBottom: 1,
     lineHeight: 24,
   },
-
   frequency: {
     fontWeight: '600',
-    color: '#444',
     marginTop: 4,
   },
-
   date: {
-    color: '#666',
     marginTop: 4,
   },
-
   total: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: 'green',
     marginBottom: 10,
     paddingBottom: 4,
     textAlign: 'center',

@@ -1,11 +1,19 @@
 // bankapp/src/utils/phoneUtils.js
+export const formatPhoneNumber = (dialCode, inputNumber) => {
+  if (!inputNumber) return '';
+  const cleaned = inputNumber.replace(/[^0-9]/g, '').replace(/^0+/, '');
+  return `${dialCode} ${cleaned}`;
+};
 
-/**
- * Removes any dial code prefix from a phone number.
- * @param {string} phone - Full phone number including dial code
- * @returns {string} - Phone number without any country code
- */
-export const extractRawPhone = (phone) => {
-  if (!phone) return '';
-  return phone.replace(/^\+?\d{1,4}/, ''); // removes +91, +1, etc.
+export const extractPhoneWithoutDialCode = (dial, fullPhone) => {
+  if (!dial || !fullPhone) return '';
+  const fullClean = fullPhone.replace(/[^0-9]/g, '');
+  const dialDigits = dial.replace('+', '');
+  let withoutDial = fullClean;
+
+  if (fullClean.startsWith(dialDigits)) {
+    withoutDial = fullClean.slice(dialDigits.length);
+  }
+
+  return withoutDial.replace(/^0+/, '');
 };

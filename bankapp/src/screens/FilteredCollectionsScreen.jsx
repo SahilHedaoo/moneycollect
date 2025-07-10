@@ -1,25 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import api from '../services/api';
-import AppBar from '../components/AppBar';
 import useFetch from '../hooks/useFetch';
-import { useRoute } from '@react-navigation/native';
-import { useNavigation } from '@react-navigation/native';
-import { TouchableOpacity } from 'react-native';
-import { useContext } from 'react';
 import { SettingsContext } from '../context/SettingsContext';
+import { ThemeContext } from '../context/themeContext';
+import { lightTheme, darkTheme } from '../styles/themes';
 import { showToast } from '../ui/toast';
-
 
 const FilteredCollectionsScreen = () => {
   const { currency, symbol } = useContext(SettingsContext);
+  const { theme } = useContext(ThemeContext);
+  const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
+
   const { data: usersData, loading: usersLoading } = useFetch('/users');
   const [users, setUsers] = useState([]);
   const [collections, setCollections] = useState([]);
   const [filteredCollections, setFilteredCollections] = useState([]);
   const route = useRoute();
-  const { filterType } = route.params || {}; // Get filterType from route params
+  const { filterType } = route.params || {};
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -33,7 +33,6 @@ const FilteredCollectionsScreen = () => {
       } catch (err) {
         console.error(err);
         showToast('error', 'Could not load users');
-
       }
     };
 
@@ -62,49 +61,35 @@ const FilteredCollectionsScreen = () => {
         const yesterday = new Date(today);
         yesterday.setDate(today.getDate() - 1);
         const startOfWeek = new Date(today);
-        // Set to Monday of the current week (MySQL YEARWEEK mode 1 starts on Monday)
         startOfWeek.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const startOfYear = new Date(now.getFullYear(), 0, 1);
 
         const filtered = collections.filter((item) => {
-          const collectedAt = new Date(item.collected_at); // Parse collected_at
-          if (!collectedAt || isNaN(collectedAt)) return false; // Skip invalid dates
+          const collectedAt = new Date(item.collected_at);
+          if (!collectedAt || isNaN(collectedAt)) return false;
 
           switch (filterType) {
             case 'today':
-              return (
-                collectedAt.getFullYear() === today.getFullYear() &&
-                collectedAt.getMonth() === today.getMonth() &&
-                collectedAt.getDate() === today.getDate()
-              );
+              return collectedAt.toDateString() === today.toDateString();
             case 'yesterday':
-              return (
-                collectedAt.getFullYear() === yesterday.getFullYear() &&
-                collectedAt.getMonth() === yesterday.getMonth() &&
-                collectedAt.getDate() === yesterday.getDate()
-              );
+              return collectedAt.toDateString() === yesterday.toDateString();
             case 'week':
-              // Check if collected_at is in the same week (Monday to Sunday)
-              const weekStart = new Date(startOfWeek);
               const weekEnd = new Date(startOfWeek);
-              weekEnd.setDate(startOfWeek.getDate() + 6); // End of week (Sunday)
-              return collectedAt >= weekStart && collectedAt <= new Date(weekEnd.getFullYear(), weekEnd.getMonth(), weekEnd.getDate(), 23, 59, 59, 999);
+              weekEnd.setDate(startOfWeek.getDate() + 6);
+              return collectedAt >= startOfWeek && collectedAt <= new Date(weekEnd.getFullYear(), weekEnd.getMonth(), weekEnd.getDate(), 23, 59, 59, 999);
             case 'month':
-              return (
-                collectedAt.getMonth() === now.getMonth() &&
-                collectedAt.getFullYear() === now.getFullYear()
-              );
+              return collectedAt.getMonth() === now.getMonth() &&
+                     collectedAt.getFullYear() === now.getFullYear();
             case 'year':
               return collectedAt.getFullYear() === now.getFullYear();
             default:
-              return true; // No filter applied
+              return true;
           }
         });
 
-        // Enrich collections with user data
         const enrichedCollections = filtered.map((item) => {
-          const userData = users.find((user) => user.id === item.user_id && user.bank_id === item.bank_id);
+          const userData = users.find((u) => u.id === item.user_id && u.bank_id === item.bank_id);
           return {
             ...item,
             first_name: userData?.first_name || '',
@@ -119,6 +104,46 @@ const FilteredCollectionsScreen = () => {
       filterCollections();
     }
   }, [collections, filterType, users]);
+
+  const styles = StyleSheet.create({
+    container: { backgroundColor: selectedTheme.background, flex: 1 },
+    subcontainer: { padding: 16, backgroundColor: selectedTheme.background, flex: 1 },
+    heading: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: 10,
+      color: selectedTheme.text,
+    },
+    card: {
+      padding: 12,
+      borderWidth: 1,
+      borderColor: '#ccc',
+      borderRadius: 8,
+      marginBottom: 10,
+      backgroundColor: selectedTheme.card,
+    },
+    amount: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: selectedTheme.primary,
+      marginTop: 4,
+      lineHeight: 22,
+    },
+    name: {
+      fontWeight: 'bold',
+      fontSize: 16,
+      color: selectedTheme.text,
+    },
+    date: {
+      color: selectedTheme.text,
+      marginTop: 4,
+    },
+    emptyText: {
+      color: selectedTheme.text,
+      textAlign: 'center',
+      marginTop: 20,
+    },
+  });
 
   return (
     <View style={styles.container}>
@@ -138,39 +163,15 @@ const FilteredCollectionsScreen = () => {
                   {item.first_name} {item.last_name}
                 </Text>
                 <Text style={styles.amount}>Amount: {symbol}{item.amount}</Text>
-                <Text>Date: {new Date(item.collected_at).toLocaleString()}</Text>
+                <Text style={styles.date}>Date: {new Date(item.collected_at).toLocaleString()}</Text>
               </View>
             </TouchableOpacity>
           )}
-
-          ListEmptyComponent={<Text>No collections found for this period.</Text>}
+          ListEmptyComponent={<Text style={styles.emptyText}>No collections found for this period.</Text>}
         />
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { backgroundColor: '#fff', flex: 1 },
-  subcontainer: { padding: 16, backgroundColor: '#fff', flex: 1 },
-  heading: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, color: '#000' },
-  card: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    marginBottom: 10,
-    backgroundColor: '#f9f9f9',
-  },
-  amount: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e88e5',
-    marginTop: 4,
-    lineHeight: 22,
-  },
-
-  name: { fontWeight: 'bold', fontSize: 16 },
-});
 
 export default FilteredCollectionsScreen;

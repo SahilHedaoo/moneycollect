@@ -6,141 +6,113 @@ import { Button } from 'react-native-paper';
 import ViewShot from 'react-native-view-shot';
 import RNFS from 'react-native-fs';
 import { SettingsContext } from '../context/SettingsContext';
+import { ThemeContext } from '../context/themeContext';
+import { lightTheme, darkTheme } from '../styles/themes';
 import { showToast } from '../ui/toast';
+import { Linking } from 'react-native';
 
 const ReceiptScreen = () => {
   const { symbol, dialCode } = useContext(SettingsContext);
+  const { theme } = useContext(ThemeContext);
+  const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
+
   const { params } = useRoute();
   const { item } = params || {};
   const viewShotRef = useRef();
 
   const handleShareImage = async () => {
     try {
-      if (!item.phone) {
-        showToast('error', 'Phone number not available.');
-        return;
-      }
-      const rawPhone = item.phone.replace(/^\+?\d{1,4}/, '');
-
-      const formattedPhone = `${dialCode}${rawPhone}`.replace(/[^0-9]/g, '');
-
-      // Capture screenshot
       const uri = await viewShotRef.current.capture();
+      if (!uri) throw new Error('Failed to capture receipt image.');
+
       const filePath = `${RNFS.CachesDirectoryPath}/receipt_${Date.now()}.png`;
       await RNFS.copyFile(uri, filePath);
 
-      const shareOptions = {
+      const isWAInstalled = await Share.isPackageInstalled('com.whatsapp');
+      if (!isWAInstalled) {
+        return showToast('error', 'WhatsApp is not installed on this device.');
+      }
+
+      await Share.shareSingle({
         url: `file://${filePath}`,
         type: 'image/png',
-        social: Share.Social.WHATSAPP,
-        whatsAppNumber: formattedPhone,
         failOnCancel: false,
-      };
+        social: Share.Social.WHATSAPP,
+      });
 
-      await Share.shareSingle(shareOptions);
+      if (item?.phone && item?.dial_code) {
+        const formattedPhone = `${item.dial_code}${item.phone}`.replace(/\s+/g, '');
+        const message = `Hi ${item.first_name}, here is your receipt:\nAmount: ${symbol}${item.amount}\nDate: ${new Date(item.collected_at).toLocaleString()}`;
+        const whatsappUrl = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+
+        setTimeout(() => {
+          Linking.openURL(whatsappUrl).catch(() => {
+            showToast('error', 'Could not open WhatsApp to send message.');
+          });
+        }, 800);
+      }
     } catch (error) {
-      console.error('Error sharing receipt image:', error);
-      showToast('error', 'Could not share the receipt.');
+      console.error('Error during WhatsApp share:', error);
+      showToast('error', error.message || 'Could not share receipt.');
     }
   };
 
-  if (!item) {
-    return <Text style={styles.error}>No receipt data found.</Text>;
-  }
+  if (!item) return <Text style={[styles.error, { color: selectedTheme.text }]}>No receipt data found.</Text>;
 
   return (
+    <View style={{ flex: 1, backgroundColor: selectedTheme.background }}>
     <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 0.9 }}>
-      <View style={styles.receiptBox}>
-        <View style={styles.row}>
-          <Text style={styles.label}>Name:</Text>
-          <Text style={styles.value}>{item.first_name} {item.last_name}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Amount:</Text>
-          <Text style={styles.value}>{symbol}{item.amount}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Package Name:</Text>
-          <Text style={styles.value}>{item.frequency}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Date:</Text>
-          <Text style={styles.value}>{new Date(item.collected_at).toLocaleString()}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>User ID:</Text>
-          <Text style={styles.value}>{item.user_id}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Bank ID:</Text>
-          <Text style={styles.value}>{item.bank_id}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Phone:</Text>
-          <Text style={styles.value}>
-            {`${dialCode}${item.phone.replace(/^\+?\d{1,4}/, '')}`}
-          </Text>
-        </View>
-
+      <View style={[styles.receiptBox, { backgroundColor: selectedTheme.card, borderColor: selectedTheme.text }]}>
+        <TextRow label="Name:" value={`${item.first_name} ${item.last_name}`} textColor={selectedTheme.text} />
+        <TextRow label="Amount:" value={`${symbol}${item.amount}`} textColor={selectedTheme.text} />
+        <TextRow label="Package Name:" value={item.frequency} textColor={selectedTheme.text} />
+        <TextRow label="Date:" value={new Date(item.collected_at).toLocaleString()} textColor={selectedTheme.text} />
+        <TextRow label="User ID:" value={item.user_id} textColor={selectedTheme.text} />
+        <TextRow label="Bank ID:" value={item.bank_id} textColor={selectedTheme.text} />
+        <TextRow label="Phone:" value={`${dialCode} ${item.phone}`} textColor={selectedTheme.text} />
 
         <View style={{ marginTop: 20, alignItems: 'center' }}>
-          <Button
-            style={{ backgroundColor: '#25D366' }}
-            mode="contained"
-            onPress={handleShareImage}
-          >
+          <Button mode="contained" style={{ backgroundColor: '#25D366' }} onPress={handleShareImage}>
             Share Receipt via WhatsApp
           </Button>
         </View>
       </View>
     </ViewShot>
+    </View>
   );
 };
 
+const TextRow = ({ label, value, textColor }) => (
+  <View style={styles.row}>
+    <Text style={[styles.label, { color: textColor }]}>{label}</Text>
+    <Text style={[styles.value, { color: textColor }]}>{value}</Text>
+  </View>
+);
+
 const styles = StyleSheet.create({
   receiptBox: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
+    padding: 16,
     borderRadius: 12,
-    backgroundColor: '#f9f9f9',
     borderWidth: 1,
-    borderColor: '#ccc',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     margin: 12,
-  },
-  label: {
-    fontWeight: 'bold',
-    fontSize: 15,
-    color: '#444',
-    flex: 0.4,
-    paddingVertical: 4,
-  },
-  value: {
-    fontSize: 15,
-    color: '#000',
-    flex: 0.6,
-    paddingVertical: 4,
-    includeFontPadding: false,
-    textAlignVertical: 'center',
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
-    alignItems: 'center',
-    paddingVertical: 2,
+  },
+  label: {
+    fontWeight: 'bold',
+    flex: 0.4,
+  },
+  value: {
+    flex: 0.6,
   },
   error: {
     textAlign: 'center',
     marginTop: 20,
-    color: 'red',
     fontSize: 16,
   },
 });
+
 export default ReceiptScreen;
-
-
