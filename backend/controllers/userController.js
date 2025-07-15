@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 exports.addUser = (req, res) => {
   const { first_name, last_name, dial_code, phone, email, package_name, package_amount } = req.body;
 
-  if (!first_name || !last_name ||!dial_code || !phone || !package_name || !package_amount) {
+  if (!first_name || !last_name || !dial_code || !phone || !package_name || !package_amount) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -13,19 +13,56 @@ exports.addUser = (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const bankId = decoded.bankId;
 
-    db.query(
-      `INSERT INTO users (bank_id, first_name, last_name, dial_code, phone, email, package_name, package_amount) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [bankId, first_name, last_name, dial_code, phone, email || null, package_name, package_amount],
-      (err, result) => {
-        if (err) return res.status(500).json({ error: err });
-        res.status(201).json({ message: 'User added successfully' });
+    // Step 1: Get bank acronym
+    db.query('SELECT acronym FROM banks WHERE id = ?', [bankId], (err, bankResult) => {
+      if (err || bankResult.length === 0) {
+        return res.status(500).json({ error: 'Failed to fetch bank acronym' });
       }
-    );
+
+      const acronym = bankResult[0].acronym;
+
+      // Step 2: Count existing users for this bank
+      db.query('SELECT COUNT(*) AS count FROM users WHERE bank_id = ?', [bankId], (err, countResult) => {
+        if (err) {
+          return res.status(500).json({ error: 'Failed to count existing users' });
+        }
+
+        const userNumber = countResult[0].count + 1;
+        const customUserId = `${acronym}${userNumber.toString().padStart(2, '0')}`; // e.g., RG01
+
+        // Step 3: Insert new user with custom_user_id
+        db.query(
+          `INSERT INTO users 
+            (bank_id, first_name, last_name, dial_code, phone, email, package_name, package_amount, custom_user_id) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            bankId,
+            first_name,
+            last_name,
+            dial_code,
+            phone,
+            email || null,
+            package_name,
+            package_amount,
+            customUserId,
+          ],
+          (err, result) => {
+            if (err) {
+              return res.status(500).json({ error: err });
+            }
+            res.status(201).json({
+              message: 'User added successfully',
+              custom_user_id: customUserId,
+            });
+          }
+        );
+      });
+    });
   } catch (err) {
     return res.status(403).json({ error: 'Invalid token' });
   }
 };
+
 
 exports.getUsers = (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];

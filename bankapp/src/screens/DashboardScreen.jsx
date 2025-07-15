@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import {View, Text, StyleSheet, ScrollView, TouchableHighlight, Dimensions, FlatList,} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableHighlight, Dimensions, FlatList, } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { FAB } from 'react-native-paper';
 import { useContext } from 'react';
 import { SettingsContext } from '../context/SettingsContext';
-import { showToast } from '../ui/toast'; 
+import { showToast } from '../ui/toast';
 import { ThemeContext } from '../context/themeContext';
 import { darkTheme, lightTheme } from '../styles/themes';
-import { BarChart } from 'react-native-chart-kit';
+import { BarChart, PieChart } from 'react-native-chart-kit';
 
 const DashboardScreen = () => {
   const [summary, setSummary] = useState(null);
@@ -24,6 +24,19 @@ const DashboardScreen = () => {
   const route = useRoute();
   const { theme, toggleTheme } = useContext(ThemeContext);
   const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
+  const pieColors = [
+  '#1e88e5',
+  '#f4511e',
+  '#43a047',
+  '#ffb300',
+  '#8e24aa',
+  '#00acc1',
+  '#e53935',
+  '#3949ab',
+  '#6d4c41',
+  '#00897b',
+];
+
 
   const { currency, symbol } = useContext(SettingsContext);
   useEffect(() => {
@@ -146,7 +159,7 @@ const DashboardScreen = () => {
             <Text style={[styles.chartTitle, { color: currentTheme.text }]}>
               Top Contributing Users
             </Text>
-            
+
             <BarChart
               data={{
                 labels: topChartUsers.map((u) =>
@@ -186,14 +199,14 @@ const DashboardScreen = () => {
             />
           </View>
         )}
-
+ {/*
         {topUsers.length > 0 && (
           <View style={styles.flatListContainer}>
             <Text style={[styles.chartTitle, { color: currentTheme.text }]}>
               All Contributing Users
             </Text>
 
-            <View style={styles.userListContainer}>        
+            <View style={styles.userListContainer}>
               {paginatedUsers.map((user, index) => (
                 <View key={startIndex + index} style={styles.userRow}>
                   <Text style={[styles.userName, { color: currentTheme.text }]}>
@@ -205,9 +218,8 @@ const DashboardScreen = () => {
                 </View>
               ))}
 
-              {/* Pagination Buttons */}
               <View style={styles.paginationButtons}>
-                
+
                 <Text
                   style={[styles.paginationText, currentPage === 1 && styles.disabled]}
                   onPress={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
@@ -220,17 +232,48 @@ const DashboardScreen = () => {
                 >
                   Next ▶
                 </Text>
-                
+
               </View>
-              
-               <Text style={[styles.chartTitle, { color: currentTheme.text }]}>
+
+              <Text style={[styles.chartTitle, { color: currentTheme.text }]}>
                 Users (Page {currentPage} of {totalPages})
               </Text>
+
             </View>
 
 
           </View>
-        )}
+        )} 
+          */}
+{topUsers.length > 0 && (
+  <View style={styles.chartContainer}>
+    <Text style={[styles.chartTitle, { color: currentTheme.text }]}>
+      All Users Contribution (Pie Chart)
+    </Text>
+
+    <PieChart
+      data={topUsers
+        .filter(user => parseFloat(user.total) > 0) // Remove users with 0 contribution
+        .map((user, index) => ({
+          name: user.name.length > 12 ? user.name.slice(0, 12) + '…' : user.name,
+          population: parseFloat(user.total),
+          color: pieColors[index % pieColors.length],
+          legendFontColor: currentTheme.text,
+          legendFontSize: 12,
+        }))
+      }
+      width={screenWidth - 32}
+      height={220}
+      chartConfig={{
+        color: () => currentTheme.text,
+      }}
+      accessor="population"
+      backgroundColor="transparent"
+      paddingLeft="16"
+      absolute
+    />
+  </View>
+)}
 
       </ScrollView>
       <FAB
@@ -296,7 +339,7 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     marginTop: 32,
-    marginBottom:32,
+    marginBottom: 32,
     paddingVertical: 8,
     borderRadius: 12,
   },

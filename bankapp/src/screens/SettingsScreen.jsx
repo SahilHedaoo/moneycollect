@@ -28,6 +28,8 @@ const SettingsScreen = () => {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [currencySearch, setCurrencySearch] = useState('');
   const [showCurrencySearch, setShowCurrencySearch] = useState(false);
+  const [newAcronym, setNewAcronym] = useState('');
+
 
   const selectedTheme = theme === 'light' ? lightTheme : darkTheme;
 
@@ -76,25 +78,42 @@ const SettingsScreen = () => {
     setShowCountryPicker(false);
   };
 
-  const handleSave = async () => {
-    if (!country || !currency) {
-      showToast('error', 'Please select both country and currency.');
-      return;
-    }
+ const handleSave = async () => {
+  if (!country || !currency) {
+    showToast('error', 'Please select both country and currency.');
+    return;
+  }
+
+  const token = await AsyncStorage.getItem('token'); // moved outside
+  try {
+    await updateSettings(currency, symbol, country);
+
+    await api.put(
+      '/users/updateDialCode',
+      { dial_code: country.dial_code },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    showToast('success', `Country: ${country.name.en}\nCurrency: ${currency} ${symbol}`);
+  } catch (e) {
+    console.log('err', e);
+    showToast('error', 'Failed to save settings.');
+  }
+
+  if (newAcronym.trim() !== '') {
     try {
-      const token = await AsyncStorage.getItem('token');
-      await updateSettings(currency, symbol, country);
       await api.put(
-        '/users/updateDialCode',
-        { dial_code: country.dial_code },
+        '/banks/update-acronym',
+        { newAcronym: newAcronym.trim().toUpperCase() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      showToast('success', `Country: ${country.name.en}\nCurrency: ${currency} ${symbol}`);
-    } catch (e) {
-      console.log('err', e);
-      showToast('error', 'Failed to save settings.');
+      showToast('success', `Bank acronym updated to: ${newAcronym.toUpperCase()}`);
+    } catch (err) {
+      console.log('Acronym update failed', err);
+      showToast('error', 'Failed to update acronym.');
     }
-  };
+  }
+};
 
   const onSearchCurrency = (text) => {
     setCurrencySearch(text);
@@ -193,6 +212,15 @@ const SettingsScreen = () => {
         >
           Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
         </Button>
+        <Text style={styles.infoText}>Bank Acronym</Text>
+<TextInput
+  style={styles.acronymInput}
+  placeholder="Enter new acronym (e.g., RGL)"
+  placeholderTextColor="#999"
+  value={newAcronym}
+  onChangeText={setNewAcronym}
+/>
+
       </View>
 
       <Button
@@ -357,6 +385,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#1E40AF',
   },
+  acronymInput: {
+  borderWidth: 1,
+  borderColor: '#D1D5DB',
+  borderRadius: 10,
+  paddingVertical: 12,
+  paddingHorizontal: 16,
+  fontSize: 16,
+  color: '#111827',
+  backgroundColor: '#FFFFFF',
+  marginBottom: 20,
+},
+
 });
 
 export default SettingsScreen;

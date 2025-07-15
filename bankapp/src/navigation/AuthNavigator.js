@@ -19,19 +19,32 @@ import UserReportScreen from '../screens/UserReportScreen';
 import TutorialsScreen from '../screens/TutorialsScreen';
 import VideoPlayerScreen from '../screens/VideoPlayerScreen';
 import CollectionReportScreen from '../screens/CollectionReportScreen';
+import LoaderKitView from 'react-native-loader-kit';
+import { StyleSheet, View } from 'react-native';
+import BulkCollectionScreen from '../screens/BulkCollectionScreen';
 
 const Stack = createNativeStackNavigator();
 
 const AuthNavigator = () => {
   const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true); // ✅ loading state
 
   useEffect(() => {
     const fetchToken = async () => {
-      const token = await AsyncStorage.getItem('token');
-      setToken(token);
+      const storedToken = await AsyncStorage.getItem('token');
+      setToken(storedToken);
+      setLoading(false);
     };
     fetchToken();
   }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <LoaderKitView style={styles.loader} name='BallSpinFadeLoader' color="#2196F3" />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator
@@ -143,24 +156,36 @@ const AuthNavigator = () => {
           </Wrapper>
         )}
       </Stack.Screen>
-       <Stack.Screen name="VideoPlayer">
+      <Stack.Screen name="VideoPlayer">
         {({ navigation, route }) => (
           <Wrapper title="VideoPlayer" route={route} navigation={navigation}>
             <VideoPlayerScreen />
           </Wrapper>
         )}
       </Stack.Screen>
-       <Stack.Screen name="CollectionReport">
+      <Stack.Screen name="CollectionReport">
         {({ navigation, route }) => (
           <Wrapper title="CollectionReport" route={route} navigation={navigation}>
             <CollectionReportScreen />
           </Wrapper>
         )}
       </Stack.Screen>
-
+      <Stack.Screen name="BulkCollection">
+        {({ navigation, route }) => (
+          <Wrapper title="BulkCollection" route={route} navigation={navigation}>
+            <BulkCollectionScreen />
+          </Wrapper>
+        )}
+      </Stack.Screen>
     </Stack.Navigator>
 
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" },
+  loader: { width: 80, height: 80 },
+
+});
 
 export default AuthNavigator;

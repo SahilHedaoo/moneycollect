@@ -12,10 +12,12 @@ const Mainmenu = () => {
   const closeMenu = () => setVisible(false);
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('token');
-    navigation.replace('Login');
-    closeMenu();
-  };
+  await AsyncStorage.removeItem('token');
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'Login' }],
+  });
+};
 
   
   const MORE_ICON = Platform.OS === 'ios' ? 'dots-horizontal' : 'dots-vertical';
@@ -27,12 +29,12 @@ const Mainmenu = () => {
         transparent={true}
         visible={visible}
         animationType="fade"
-        onRequestClose={closeMenu} // Handles hardware back press on Android
+        onRequestClose={closeMenu} 
       >
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={closeMenu} // Closes modal when clicking outside
+          onPress={closeMenu}
         >
           <View style={styles.menuContainer}>
               <Menu.Item
@@ -58,6 +60,14 @@ const Mainmenu = () => {
                   closeMenu();
                 }}
                 title="Add Collection"
+              />
+               <Menu.Item
+                leadingIcon="cash-multiple"
+                title="BulkCollection"
+                onPress={() => {
+                  navigation.navigate('BulkCollection');
+                  closeMenu();
+                }}
               />
               <Menu.Item
                 leadingIcon="account-multiple-outline"
@@ -91,7 +101,6 @@ const Mainmenu = () => {
                   closeMenu();
                 }}
               />
-              
               <Divider style={{ height: 1 }} />
               <Menu.Item
                 leadingIcon={() => <Icon source="power" size={24} color="red" />}

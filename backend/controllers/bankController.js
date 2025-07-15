@@ -5,6 +5,14 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+// Helper: Generate acronym from bank name
+function generateAcronym(name) {
+  return name
+    .split(' ')
+    .map(word => word[0].toUpperCase())
+    .join('');
+}
+
 exports.registerBank = (req, res) => {
   const { name, email, password } = req.body;
 
@@ -25,29 +33,30 @@ exports.registerBank = (req, res) => {
   }
 
   db.query('SELECT * FROM banks WHERE email = ?', [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+
     if (results.length > 0) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
+    const acronym = generateAcronym(name); // Generate acronym like 'RG'
     const hashedPassword = await bcrypt.hash(password, 10);
+
     db.query(
-      'INSERT INTO banks (name, email, password) VALUES (?, ?, ?)',
-      [name, email, hashedPassword],
+      'INSERT INTO banks (name, email, password, acronym) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, acronym],
       (err, result) => {
         if (err) return res.status(500).json({ error: err });
-        return res.status(201).json({ message: 'Bank registered successfully' });
+        return res.status(201).json({ message: 'Bank registered successfully', acronym: acronym });
       }
     );
   });
 };
 
-
 exports.loginBank = (req, res) => {
   const { email, password } = req.body;
 
   db.query('SELECT * FROM banks WHERE email = ?', [email], async (err, results) => {
-    console.log("err", err);
-    
     if (err || results.length === 0) return res.status(400).json({ message: 'Invalid credentials' });
 
     const bank = results[0];
@@ -60,16 +69,15 @@ exports.loginBank = (req, res) => {
   });
 };
 
-
 exports.getProfile = (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Token missing' });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // use the correct secret
-    const bankId = decoded.bankId; // use correct field (matches login)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
 
-    db.query('SELECT id, name, email FROM banks WHERE id = ?', [bankId], (err, results) => {
+    db.query('SELECT id, name, email, acronym FROM banks WHERE id = ?', [bankId], (err, results) => {
       if (err) return res.status(500).json({ error: err });
       if (results.length === 0) return res.status(404).json({ error: 'Bank not found' });
       res.status(200).json(results[0]);
@@ -78,7 +86,6 @@ exports.getProfile = (req, res) => {
     return res.status(403).json({ error: 'Invalid token' });
   }
 };
-
 
 exports.changePassword = (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -111,5 +118,54 @@ exports.changePassword = (req, res) => {
     });
   } catch (err) {
     return res.status(403).json({ message: 'Invalid token' });
+  }
+};
+
+exports.updateBankAcronym = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  const { newAcronym } = req.body;
+
+  if (!newAcronym || typeof newAcronym !== 'string' || newAcronym.length < 1 || newAcronym.length > 10) {
+    return res.status(400).json({ message: 'Invalid acronym' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
+
+    // Step 1: Update acronym in banks table
+    db.query('UPDATE banks SET acronym = ? WHERE id = ?', [newAcronym.toUpperCase(), bankId], (err) => {
+      if (err) return res.status(500).json({ error: 'Failed to update bank acronym' });
+
+      // Step 2: Fetch all users with old custom_user_id
+      db.query(
+        'SELECT id, custom_user_id FROM users WHERE bank_id = ? ORDER BY id ASC',
+        [bankId],
+        (err, users) => {
+          if (err) return res.status(500).json({ error: 'Failed to fetch users for update' });
+
+          const updatePromises = users.map((user, index) => {
+            const number = (index + 1).toString().padStart(2, '0');
+            const updatedId = `${newAcronym.toUpperCase()}${number}`;
+            return new Promise((resolve, reject) => {
+              db.query(
+                'UPDATE users SET custom_user_id = ? WHERE id = ?',
+                [updatedId, user.id],
+                (err) => {
+                  if (err) reject(err);
+                  else resolve();
+                }
+              );
+            });
+          });
+
+          Promise.all(updatePromises)
+            .then(() => res.status(200).json({ message: 'Acronym and user IDs updated successfully' }))
+            .catch(err => res.status(500).json({ error: 'Error updating user IDs', details: err }));
+        }
+      );
+    });
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid token' });
   }
 };

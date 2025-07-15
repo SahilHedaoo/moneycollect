@@ -254,3 +254,35 @@ exports.getTopUsers = (req, res) => {
     return res.status(403).json({ error: 'Invalid token' });
   }
 };
+exports.addBulkCollections = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Token missing' });
+
+  let bankId;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    bankId = decoded.bankId;
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+
+  const { collections } = req.body;
+  if (!collections || !Array.isArray(collections) || collections.length === 0) {
+    return res.status(400).json({ error: 'No collections provided' });
+  }
+
+  const values = collections.map(c => [
+    bankId, c.user_id, c.amount, c.frequency, new Date()
+  ]);
+
+  const sql = `INSERT INTO collections (bank_id, user_id, amount, frequency, collected_at) VALUES ?`;
+
+  db.query(sql, [values], (err) => {
+    if (err) {
+      console.error('❌ Bulk insert error:', err);
+      return res.status(500).json({ message: 'Insert failed', error: err });
+    }
+
+    res.status(201).json({ message: '✅ Bulk collections added successfully' });
+  });
+};

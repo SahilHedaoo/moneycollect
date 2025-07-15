@@ -126,14 +126,14 @@ const UserListScreen = () => {
   const renderItem = ({ item }) => (
     <View style={[styles.card, { backgroundColor: selectedTheme.card }]}>
       <Text style={[styles.name, { color: selectedTheme.text }]}>
-        {item.first_name} {item.last_name}
+       {item.custom_user_id} {item.first_name} {item.last_name}
       </Text>
 
       <View style={styles.actions}>
         <TouchableOpacity
           onPress={() => navigation.navigate('UserCollectionHistory', {
             userId: item.id,
-            userName: `${item.first_name} ${item.last_name}`
+            userName: `${item.custom_user_id} ${item.first_name} ${item.last_name}`
           })}
         >
           <Icon name="eye" size={20} color={selectedTheme.primary} />
