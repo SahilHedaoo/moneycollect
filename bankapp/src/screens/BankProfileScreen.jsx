@@ -10,6 +10,7 @@ import {
   LayoutAnimation,
   UIManager,
   Platform,
+  ActivityIndicator
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
@@ -27,7 +28,7 @@ const BankProfileScreen = ({ navigation }) => {
   const { data: collections } = useFetch('/collections/get');
   const [bank, setBank] = useState(null);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
-
+  const [loading, setLoading] = useState(false);  
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,6 +40,7 @@ const BankProfileScreen = ({ navigation }) => {
     const fetchProfile = async () => {
       const token = await AsyncStorage.getItem('token');
       try {
+        setLoading(true);
         const res = await api.get('/banks/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -46,6 +48,8 @@ const BankProfileScreen = ({ navigation }) => {
       } catch (err) {
         console.error(err);
         showToast('error', 'Failed to load bank profile');
+      }finally{
+        setLoading(false);
       }
     };
     fetchProfile();
@@ -85,6 +89,11 @@ const BankProfileScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+          {loading && (
+            <ActivityIndicator size="large" color={currentTheme.primary} style={{ marginVertical: 10 }} />
+          )}
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+
       <ScrollView
         contentContainerStyle={[styles.subcontainer, { backgroundColor: currentTheme.card }]}
         showsVerticalScrollIndicator={false}
@@ -174,6 +183,7 @@ const BankProfileScreen = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
+    </View>
     </View>
   );
 };

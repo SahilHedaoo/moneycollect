@@ -3,105 +3,91 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import api from '../services/api';
-import useFetch from '../hooks/useFetch';
 import { SettingsContext } from '../context/SettingsContext';
 import { ThemeContext } from '../context/themeContext';
 import { lightTheme, darkTheme } from '../styles/themes';
 import { showToast } from '../ui/toast';
+import { ActivityIndicator } from 'react-native-paper'; 
 
 const FilteredCollectionsScreen = () => {
   const { currency, symbol } = useContext(SettingsContext);
   const { theme } = useContext(ThemeContext);
   const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
 
-  const { data: usersData, loading: usersLoading } = useFetch('/users');
   const [users, setUsers] = useState([]);
   const [collections, setCollections] = useState([]);
   const [filteredCollections, setFilteredCollections] = useState([]);
+  const [loading, setLoading] = useState(true); 
+
   const route = useRoute();
   const { filterType } = route.params || {};
   const navigation = useNavigation();
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       const token = await AsyncStorage.getItem('token');
       try {
-        const res = await api.get('/users', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUsers(res.data);
+        const [userRes, collectionRes] = await Promise.all([
+          api.get('/users', { headers: { Authorization: `Bearer ${token}` } }),
+          api.get('/collections/get', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        setUsers(userRes.data);
+        setCollections(collectionRes.data);
       } catch (err) {
         console.error(err);
-        showToast('error', 'Could not load users');
+        showToast('error', 'Failed to load data');
+      } finally {
+        setLoading(false);
       }
     };
 
-    const fetchCollections = async () => {
-      const token = await AsyncStorage.getItem('token');
-      try {
-        const res = await api.get('/collections/get', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCollections(res.data);
-      } catch (err) {
-        console.error(err);
-        showToast('error', 'Could not load collections');
-      }
-    };
-
-    fetchUsers();
-    fetchCollections();
+    fetchData();
   }, []);
 
   useEffect(() => {
     if (collections.length > 0 && filterType) {
-      const filterCollections = () => {
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-        const filtered = collections.filter((item) => {
-          const collectedAt = new Date(item.collected_at);
-          if (!collectedAt || isNaN(collectedAt)) return false;
+      const filtered = collections.filter((item) => {
+        const collectedAt = new Date(item.collected_at);
+        if (!collectedAt || isNaN(collectedAt)) return false;
 
-          switch (filterType) {
-            case 'today':
-              return collectedAt.toDateString() === today.toDateString();
-            case 'yesterday':
-              return collectedAt.toDateString() === yesterday.toDateString();
-            case 'week':
-              const weekEnd = new Date(startOfWeek);
-              weekEnd.setDate(startOfWeek.getDate() + 6);
-              return collectedAt >= startOfWeek && collectedAt <= new Date(weekEnd.getFullYear(), weekEnd.getMonth(), weekEnd.getDate(), 23, 59, 59, 999);
-            case 'month':
-              return collectedAt.getMonth() === now.getMonth() &&
-                     collectedAt.getFullYear() === now.getFullYear();
-            case 'year':
-              return collectedAt.getFullYear() === now.getFullYear();
-            default:
-              return true;
-          }
-        });
+        switch (filterType) {
+          case 'today':
+            return collectedAt.toDateString() === today.toDateString();
+          case 'yesterday':
+            return collectedAt.toDateString() === yesterday.toDateString();
+          case 'week':
+            const weekEnd = new Date(startOfWeek);
+            weekEnd.setDate(startOfWeek.getDate() + 6);
+            return collectedAt >= startOfWeek && collectedAt <= new Date(weekEnd.getFullYear(), weekEnd.getMonth(), weekEnd.getDate(), 23, 59, 59, 999);
+          case 'month':
+            return collectedAt.getMonth() === now.getMonth() && collectedAt.getFullYear() === now.getFullYear();
+          case 'year':
+            return collectedAt.getFullYear() === now.getFullYear();
+          default:
+            return true;
+        }
+      });
 
-        const enrichedCollections = filtered.map((item) => {
-          const userData = users.find((u) => u.id === item.user_id && u.bank_id === item.bank_id);
-          return {
-            ...item,
-            first_name: userData?.first_name || '',
-            last_name: userData?.last_name || '',
-            phone: userData?.phone || '',
-          };
-        });
-
-        setFilteredCollections(enrichedCollections);
-      };
-
-      filterCollections();
+      const enrichedCollections = filtered.map((item) => {
+        const userData = users.find((u) => u.id === item.user_id && u.bank_id === item.bank_id);
+        return {
+          ...item,
+          first_name: userData?.first_name || '',
+          last_name: userData?.last_name || '',
+          phone: userData?.phone || '',
+        };
+      });
+      setFilteredCollections(enrichedCollections);
     }
   }, [collections, filterType, users]);
 
@@ -153,22 +139,42 @@ const FilteredCollectionsScreen = () => {
             ? `Collections for ${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`
             : 'Collections'}
         </Text>
-        <FlatList
-          data={filteredCollections}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => navigation.navigate('Receipt', { item })}>
-              <View style={styles.card}>
-                <Text style={styles.name}>
-                  {item.first_name} {item.last_name}
-                </Text>
-                <Text style={styles.amount}>Amount: {symbol}{item.amount}</Text>
-                <Text style={styles.date}>Date: {new Date(item.collected_at).toLocaleString()}</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-          ListEmptyComponent={<Text style={styles.emptyText}>No collections found for this period.</Text>}
-        />
+
+        {/* 👇 Loading Indicator */}
+        {loading ? (
+          <ActivityIndicator
+            animating={true}
+            size="large"
+            color={selectedTheme.primary}
+            style={{ marginTop: 40 }}
+          />
+        ) : (
+          <FlatList
+            data={filteredCollections}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => navigation.navigate('Receipt', { item })}>
+                <View style={styles.card}>
+                  <Text style={styles.name}>
+                    {item.first_name} {item.last_name}
+                  </Text>
+                  <Text style={styles.amount}>
+                    Amount: {symbol}
+                    {item.amount}
+                  </Text>
+                  <Text style={styles.date}>
+                    Date: {new Date(item.collected_at).toLocaleString()}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>
+                No collections found for this period.
+              </Text>
+            }
+          />
+        )}
       </View>
     </View>
   );

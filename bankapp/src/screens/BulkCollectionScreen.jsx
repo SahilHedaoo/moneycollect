@@ -1,270 +1,126 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
-  TextInput,
-  ActivityIndicator,
   StyleSheet,
-  SectionList,
-  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  Switch,
 } from 'react-native';
-import { Checkbox, Button } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '../services/api';
+import { Button, TextInput, RadioButton } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import { ThemeContext } from '../context/themeContext';
 import { lightTheme, darkTheme } from '../styles/themes';
+import { useNavigation } from '@react-navigation/native';
 
 const BulkCollectionScreen = () => {
   const { theme } = useContext(ThemeContext);
   const currentTheme = theme === 'light' ? lightTheme : darkTheme;
+  const navigation = useNavigation();
 
-  const [users, setUsers] = useState([]);
-  const [selectedUsers, setSelectedUsers] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [selectAll, setSelectAll] = useState(false);
-  const animation = new Animated.Value(0);
+  const [filterAmount, setFilterAmount] = useState('');
+  const [packageType, setPackageType] = useState('');
+  const [matchBoth, setMatchBoth] = useState(false);
 
-  const fetchUsers = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      const response = await api.get('/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = response.data;
-      const initial = {};
-      data.forEach(user => {
-        initial[user.id.toString()] = {
-          selected: false,
-          amount: user.package_amount,
-          package: user.package_name,
-        };
-      });
-
-      setUsers(data);
-      setSelectedUsers(initial);
-    } catch (err) {
-      console.error('🔥 Error fetching users:', err);
+  const handleFilter = () => {
+    if (!filterAmount && !packageType) {
+      Toast.show({ type: 'error', text1: 'Enter amount or select package type' });
+      return;
     }
-  };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const toggleUser = (id) => {
-    setSelectedUsers(prev => ({
-      ...prev,
-      [id]: { ...prev[id], selected: !prev[id].selected }
-    }));
-
-    Animated.sequence([
-      Animated.timing(animation, { toValue: 1, duration: 150, useNativeDriver: true }),
-      Animated.timing(animation, { toValue: 0, duration: 150, useNativeDriver: true }),
-    ]).start();
-  };
-
-  const updateAmount = (id, amount) => {
-    setSelectedUsers(prev => ({
-      ...prev,
-      [id]: { ...prev[id], amount }
-    }));
-  };
-
-  const selectedCollections = Object.entries(selectedUsers).filter(([_, val]) => val.selected);
-  const totalAmount = selectedCollections.reduce((sum, [id, val]) => sum + parseFloat(val.amount || 0), 0);
-
-  const handleSelectAll = () => {
-    const updated = {};
-    Object.entries(selectedUsers).forEach(([id, val]) => {
-      updated[id] = { ...val, selected: !selectAll };
+    navigation.navigate('FilteredUsers', {
+      amount: filterAmount,
+      package: packageType,
+      matchMode: matchBoth ? 'and' : 'or',
     });
-    setSelectedUsers(updated);
-    setSelectAll(!selectAll);
   };
-
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
-      const token = await AsyncStorage.getItem('token');
-
-      const collections = selectedCollections.map(([user_id, val]) => ({
-        user_id,
-        amount: parseFloat(val.amount),
-        frequency: val.package || 'Daily',
-      }));
-
-      if (collections.length === 0) {
-        Toast.show({ type: 'error', text1: 'No users selected!' });
-        return;
-      }
-
-      await api.post('/collections/bulk', { collections }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      Toast.show({ type: 'success', text1: 'Collections added!' });
-
-      const reset = {};
-      users.forEach(user => {
-        reset[user.id.toString()] = {
-          selected: false,
-          amount: user.package_amount,
-          package: user.package_name
-        };
-      });
-      setSelectedUsers(reset);
-      setSelectAll(false);
-
-    } catch (error) {
-      console.error("Error submitting collections:", error);
-      Toast.show({ type: 'error', text1: 'Failed to submit collections.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const groupedData = users.reduce((acc, user) => {
-    const pkg = user.package_name || 'Other';
-    if (!acc[pkg]) acc[pkg] = [];
-    acc[pkg].push(user);
-    return acc;
-  }, {});
-
-  const sections = Object.entries(groupedData).map(([title, data]) => ({ title, data }));
 
   return (
-    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
-      {loading && (
-        <ActivityIndicator size="large" color={currentTheme.primary} style={{ marginVertical: 10 }} />
-      )}
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: currentTheme.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={styles.card}>
+        <Text style={[styles.heading, { color: currentTheme.primary }]}>Bulk Collection</Text>
 
-      <View style={styles.selectAllRow}>
-        <Checkbox
-          status={selectAll ? 'checked' : 'unchecked'}
-          onPress={handleSelectAll}
-          color={currentTheme.primary}
+        <TextInput
+          label="Filter by Package Amount (optional)"
+          value={filterAmount}
+          onChangeText={setFilterAmount}
+          keyboardType="numeric"
+          styles={[styles.input, { backgroundColor: '#1e88e5' }]}
+          placeholder="e.g., 100"
         />
-        <Text style={{ color: currentTheme.text }}>Select All</Text>
+
+        <Text style={[styles.label, { color: currentTheme.text }]}>Or Select Package Type</Text>
+        <RadioButton.Group onValueChange={setPackageType} value={packageType}>
+          {['Daily', 'Weekly', 'Monthly'].map((type) => (
+            <View key={type} style={styles.radioRow}>
+              <RadioButton value={type} color={currentTheme.primary} />
+              <Text style={{ color: currentTheme.text }}>{type}</Text>
+            </View>
+          ))}
+        </RadioButton.Group>
+
+        <View style={styles.switchRow}>
+          <Text style={[styles.label, { color: currentTheme.text }]}>
+            Match both amount and type?
+          </Text>
+          <Switch
+            value={matchBoth}
+            onValueChange={() => setMatchBoth(!matchBoth)}
+            trackColor={{ false: '#aaa', true: currentTheme.primary }}
+          />
+        </View>
+
+        <Button mode="contained" onPress={handleFilter} style={styles.button}>
+          View Users
+        </Button>
       </View>
-
-      <SectionList
-        sections={sections}
-        keyExtractor={item => item.id.toString()}
-        renderSectionHeader={({ section: { title } }) => (
-          <Text style={[styles.sectionHeader, { color: currentTheme.primary }]}>{title}</Text>
-        )}
-        renderItem={({ item }) => (
-          <Animated.View style={[styles.item, {
-            transform: [{
-              scale: animation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [1, 1.05]
-              })
-            }]
-          }]}>
-            {selectedUsers[item.id] && (
-              <Checkbox
-                status={selectedUsers[item.id].selected ? 'checked' : 'unchecked'}
-                onPress={() => toggleUser(item.id)}
-                color={currentTheme.primary}
-              />
-            )}
-            <Text style={[styles.nameText, { color: currentTheme.text }]}>
-              {item.first_name} {item.last_name}
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  color: currentTheme.text,
-                  borderBottomColor: currentTheme.primary
-                }
-              ]}
-              keyboardType='numeric'
-              value={selectedUsers[item.id]?.amount?.toString() || ''}
-              onChangeText={(text) => updateAmount(item.id, text)}
-              placeholder="Amount"
-              placeholderTextColor={currentTheme.text + '80'}
-            />
-          </Animated.View>
-        )}
-      />
-
-      <View style={styles.summary}>
-        <Text style={{ color: currentTheme.text }}>Total Users Selected: {selectedCollections.length}</Text>
-        <Text style={{ color: currentTheme.text }}>Total Amount: ₹{totalAmount.toFixed(2)}</Text>
-      </View>
-
-      <Button
-        mode="contained"
-        onPress={handleSubmit}
-        disabled={selectedCollections.length === 0 || loading}
-        style={[
-          styles.submitButton,
-          {
-            backgroundColor:
-              selectedCollections.length > 0 ? currentTheme.primary : '#e0e0e0',
-          },
-        ]}
-        contentStyle={{ paddingVertical: 8 }}
-        labelStyle={{
-          color: selectedCollections.length > 0 ? '#fff' : '#333',
-          fontWeight: 'bold',
-          fontSize: 16,
-        }}
-      >
-        Submit All
-      </Button>
-
-
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-    flex: 1,
+  container: { flex: 1, justifyContent: 'center', padding: 16 },
+  card: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 3,
   },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 5,
+  heading: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   input: {
-    borderBottomWidth: 1,
-    marginLeft: 10,
-    width: 80,
-    fontSize: 14,
+    marginBottom: 16,
   },
-  nameText: {
-    flex: 1,
+  label: {
     fontSize: 16,
-  },
-  summary: {
-    paddingVertical: 10,
-    borderTopWidth: 1,
     marginTop: 10,
+    marginBottom: 4,
   },
-  submitButton: {
-    marginTop: 10,
-    borderRadius: 8,
-    elevation: 2,
-  },
-  sectionHeader: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-  },
-  selectAllRow: {
+  radioRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-  }
+    marginBottom: 8,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  button: { 
+    borderRadius: 8,
+    paddingVertical: 8,
+    marginTop: 8,
+    backgroundColor: '#1e88e5',
+  },
 });
 
 export default BulkCollectionScreen;

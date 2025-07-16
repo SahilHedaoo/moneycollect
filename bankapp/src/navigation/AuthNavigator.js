@@ -22,7 +22,7 @@ import CollectionReportScreen from '../screens/CollectionReportScreen';
 import LoaderKitView from 'react-native-loader-kit';
 import { StyleSheet, View } from 'react-native';
 import BulkCollectionScreen from '../screens/BulkCollectionScreen';
-
+import FilteredUsersScreen from '../screens/FilteredUsersScreen';
 const Stack = createNativeStackNavigator();
 
 const AuthNavigator = () => {
@@ -177,6 +177,14 @@ const AuthNavigator = () => {
           </Wrapper>
         )}
       </Stack.Screen>
+     <Stack.Screen name="FilteredUsers">
+  {({ navigation, route }) => (
+    <Wrapper title="FilteredUsers" route={route} navigation={navigation}>
+      <FilteredUsersScreen navigation={navigation} route={route} />
+    </Wrapper>
+  )}
+</Stack.Screen>
+
     </Stack.Navigator>
 
   );
