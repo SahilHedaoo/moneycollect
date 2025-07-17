@@ -23,6 +23,8 @@ import LoaderKitView from 'react-native-loader-kit';
 import { StyleSheet, View } from 'react-native';
 import BulkCollectionScreen from '../screens/BulkCollectionScreen';
 import FilteredUsersScreen from '../screens/FilteredUsersScreen';
+import ReturnMoneyScreen from '../screens/ReturnMoneyScreen';
+import TrashUserScreen from '../screens/TrashUserScreen';
 const Stack = createNativeStackNavigator();
 
 const AuthNavigator = () => {
@@ -177,13 +179,27 @@ const AuthNavigator = () => {
           </Wrapper>
         )}
       </Stack.Screen>
-     <Stack.Screen name="FilteredUsers">
-  {({ navigation, route }) => (
-    <Wrapper title="FilteredUsers" route={route} navigation={navigation}>
-      <FilteredUsersScreen navigation={navigation} route={route} />
-    </Wrapper>
-  )}
-</Stack.Screen>
+      <Stack.Screen name="FilteredUsers">
+        {({ navigation, route }) => (
+          <Wrapper title="FilteredUsers" route={route} navigation={navigation}>
+            <FilteredUsersScreen navigation={navigation} route={route} />
+          </Wrapper>
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="ReturnMoney">
+        {({ navigation, route }) => (
+          <Wrapper title="ReturnMoney" route={route} navigation={navigation}>
+            <ReturnMoneyScreen navigation={navigation} route={route} />
+          </Wrapper>
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="TrashUser">
+        {({ navigation, route }) => (
+          <Wrapper title="TrashUser" route={route} navigation={navigation}>
+            <TrashUserScreen navigation={navigation} route={route} />
+          </Wrapper>
+        )}
+      </Stack.Screen>
 
     </Stack.Navigator>
 

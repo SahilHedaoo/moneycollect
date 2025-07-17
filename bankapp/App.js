@@ -18,8 +18,9 @@ const App = () => {
       <SettingsProvider>
         <AppContent />
          <Toast />
-      </SettingsProvider>
+      </SettingsProvider><Toast />
     </NavigationContainer>
+    <Toast />
     </ThemeProvider>
   );
 };

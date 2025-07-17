@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addCollection, getCollectionsByUser,getTotalAmountByUser,getFilteredCollections,getUser, getCollections, getCollectionsByDateRange, getTopUsers, addBulkCollections } = require('../controllers/collectionController');
+const { addCollection, getCollectionsByUser,getTotalAmountByUser,getFilteredCollections,getUser, getCollections, getCollectionsByDateRange, getTopUsers, addBulkCollections, deleteCollection, restoreCollection } = require('../controllers/collectionController');
 const { getSummaryByBank } = require('../controllers/collectionController');
 
 router.post('/', addCollection); 
@@ -13,6 +13,7 @@ router.get('/get', getCollections);
 router.get('/by-date', getCollectionsByDateRange);
 router.get('/top-users', getTopUsers);
 router.post('/bulk', addBulkCollections);
-
+router.delete('/:collectionId', deleteCollection);
+router.post('/:collectionId/restore', restoreCollection);
 
 module.exports = router;

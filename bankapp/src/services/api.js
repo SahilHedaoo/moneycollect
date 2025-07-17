@@ -47,4 +47,10 @@ api.interceptors.response.use(
   }
 );
 
+
+export const restoreUser = (userId) => {
+  return api.put(`/users/restore/${userId}`, {}); // send empty JSON object
+};
+
+
 export default api;

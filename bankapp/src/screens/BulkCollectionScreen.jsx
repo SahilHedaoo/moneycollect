@@ -40,7 +40,7 @@ const BulkCollectionScreen = () => {
       style={[styles.container, { backgroundColor: currentTheme.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.card}>
+      <View style={[styles.card,{ backgroundColor: currentTheme.card} ]}>
         <Text style={[styles.heading, { color: currentTheme.primary }]}>Bulk Collection</Text>
 
         <TextInput
@@ -84,7 +84,6 @@ const BulkCollectionScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 16 },
   card: {
-    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
     elevation: 3,

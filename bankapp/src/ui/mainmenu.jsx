@@ -7,7 +7,6 @@ import { useNavigation } from '@react-navigation/native';
 const Mainmenu = () => {
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation();
-
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
 
@@ -19,7 +18,6 @@ const Mainmenu = () => {
   });
 };
 
-  
   const MORE_ICON = Platform.OS === 'ios' ? 'dots-horizontal' : 'dots-vertical';
 
   return (
@@ -98,6 +96,14 @@ const Mainmenu = () => {
                 title="Tutorials"
                 onPress={() => {
                   navigation.navigate('Tutorials');
+                  closeMenu();
+                }}
+              />
+              <Menu.Item
+                leadingIcon="trash-can-outline"
+                title="TrashUsers"
+                onPress={() => {
+                  navigation.navigate('TrashUser');
                   closeMenu();
                 }}
               />

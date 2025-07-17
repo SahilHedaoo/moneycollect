@@ -71,7 +71,7 @@ exports.getUsers = (req, res) => {
     const bankId = decoded.bankId;
 
     db.query(
-      'SELECT * FROM users WHERE bank_id = ?',
+      'SELECT * FROM users WHERE bank_id = ? AND is_deleted = FALSE',
       [bankId],
       (err, results) => {
         if (err) return res.status(500).json({ error: err });
@@ -91,15 +91,26 @@ exports.deleteUser = (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const bankId = decoded.bankId;
 
+    // Step 1: Soft delete the user
     db.query(
-      'DELETE FROM users WHERE id = ? AND bank_id = ?',
+      'UPDATE users SET is_deleted = TRUE WHERE id = ? AND bank_id = ?',
       [userId, bankId],
       (err, result) => {
         if (err) return res.status(500).json({ error: err });
         if (result.affectedRows === 0) {
           return res.status(403).json({ error: 'User not found or not owned by bank' });
         }
-        res.status(200).json({ message: 'User deleted successfully' });
+
+        // Step 2: Soft delete all collections for the user
+        db.query(
+          'UPDATE collections SET is_deleted = TRUE WHERE user_id = ?',
+          [userId],
+          (err2) => {
+            if (err2) return res.status(500).json({ error: err2 });
+
+            res.status(200).json({ message: 'User and their collections soft deleted successfully' });
+          }
+        );
       }
     );
   } catch (err) {
@@ -165,3 +176,63 @@ exports.updateDialCode = (req, res) => {
     return res.status(403).json({ error: 'Invalid token', details: err.message });
   }
 };
+
+
+// ✅ backend/controllers/userController.js (add at bottom)
+// Restore a soft-deleted user and their collections
+exports.restoreUser = (req, res) => {
+  const userId = req.params.id;
+  const token = req.headers.authorization?.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
+
+    // Step 1: Restore user
+    db.query(
+      'UPDATE users SET is_deleted = FALSE WHERE id = ? AND bank_id = ?',
+      [userId, bankId],
+      (err, result) => {
+        if (err) return res.status(500).json({ error: err });
+        if (result.affectedRows === 0) {
+          return res.status(400).json({ error: 'User not found or unauthorized' });
+        }
+
+        // Step 2: Restore collections
+        db.query(
+          'UPDATE collections SET is_deleted = FALSE WHERE user_id = ?',
+          [userId],
+          (err2) => {
+            if (err2) return res.status(500).json({ error: err2 });
+            res.status(200).json({ message: 'User and collections restored' });
+          }
+        );
+      }
+    );
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+};
+
+
+
+exports.getDeletedUsers = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
+
+    db.query(
+      'SELECT * FROM users WHERE bank_id = ? AND is_deleted = TRUE',
+      [bankId],
+      (err, results) => {
+        if (err) return res.status(500).json({ error: err });
+        res.status(200).json(results);
+      }
+    );
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+};
+

@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 20,
     borderRadius: 8,
+    backgroundColor: '#2196F3', 
   },
   header: {
     fontSize: 18,

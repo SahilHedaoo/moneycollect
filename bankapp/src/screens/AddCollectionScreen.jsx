@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
-    maxHeight: 150,
+    maxHeight: '100%',
     marginBottom: 10,
     elevation: 3,
     zIndex: 10,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     padding: 7,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    backgroundColor: '#ffe',
+  
   },
   dateButton: {
     borderWidth: 1,

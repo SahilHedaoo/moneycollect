@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
+  Alert 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
@@ -17,6 +18,7 @@ import { ThemeContext } from '../context/themeContext';
 import { lightTheme, darkTheme } from '../styles/themes';
 import { showToast } from '../ui/toast';
 import DateButton from '../components/DateButton';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const UserCollectionHistoryScreen = () => {
   const { currency, symbol } = useContext(SettingsContext);
@@ -74,13 +76,44 @@ const UserCollectionHistoryScreen = () => {
     fetchCollections();
   };
 
+  const handleDelete = async (id) => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    await api.delete(`/collections/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    showToast('success', 'Collection deleted successfully');
+    fetchCollections(); // Refresh list
+  } catch (err) {
+    console.error(err);
+    showToast('error', 'Failed to delete collection');
+  }
+};
+const confirmDelete = (id) => {
+  Alert.alert(
+    'Delete Collection',
+    'Are you sure you want to delete this collection?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => handleDelete(id) },
+    ]
+  );
+};
+
   const renderCollection = (item) => (
-    <View key={item.id} style={[styles.item, { backgroundColor: selectedTheme.card, borderColor: selectedTheme.text + '33' }]}>
+    <View key={item.id} style={[styles.item, { backgroundColor: selectedTheme.card, borderColor: selectedTheme.text + '33',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center', }]}>
+          <View>
       <Text style={[styles.amount, { color: selectedTheme.primary }]}>{symbol}{item.amount}</Text>
       <Text style={[styles.frequency, { color: selectedTheme.text }]}>{item.frequency.toUpperCase()}</Text>
       <Text style={[styles.date, { color: selectedTheme.text + '99' }]}>
         {new Date(item.collected_at).toLocaleString()}
-      </Text>
+      </Text></View>
+      <TouchableOpacity onPress={() => confirmDelete(item.id)}>
+      <MaterialIcons name="delete" size={24} color="red" />
+    </TouchableOpacity>
     </View>
   );
 

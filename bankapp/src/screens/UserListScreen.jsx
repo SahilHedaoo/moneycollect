@@ -146,6 +146,10 @@ const UserListScreen = () => {
         <TouchableOpacity onPress={() => askDelete(item.id)}>
           <Icon name="trash" size={20} color="#ff4d4d" />
         </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('ReturnMoney', { user: item})}>
+          <Icon name="undo" size={20} color={selectedTheme.primary} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -171,6 +175,13 @@ const UserListScreen = () => {
       <TouchableOpacity style={styles.updateAllButton} onPress={handleBulkUpdate}>
         <Text style={styles.updateAllButtonText}>Apply Dial Code to All Users</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+  style={[styles.updateAllButton, { backgroundColor: '#dc3545' }]}
+  onPress={() => navigation.navigate('TrashUser')}
+>
+  <Text style={styles.updateAllButtonText}>View Deleted Users</Text>
+</TouchableOpacity>
+
 
       {loading ? (
         <ActivityIndicator size="large" color={selectedTheme.primary} style={{ marginTop: 20 }} />

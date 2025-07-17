@@ -12,7 +12,7 @@ const ConfirmModal = ({ visible, onConfirm, onCancel, message }) => {
               <Text style={styles.btnText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={onConfirm} style={[styles.btn, styles.confirm]}>
-              <Text style={[styles.btnText, { color: 'white' }]}>Delete</Text>
+              <Text style={[styles.btnText, { color: 'white' }]}>Confirm</Text>
             </TouchableOpacity>
           </View>
         </View>

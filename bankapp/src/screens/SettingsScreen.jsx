@@ -18,6 +18,9 @@ import { ThemeContext } from '../context/themeContext';
 import { showToast } from '../ui/toast';
 import api from '../services/api';
 import { lightTheme, darkTheme } from '../styles/themes';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+
+// Feather has sun/moon icons
 
 const SettingsScreen = () => {
   const { updateSettings, country: contextCountry } = useContext(SettingsContext);
@@ -202,17 +205,22 @@ const SettingsScreen = () => {
 
       {symbol !== '' && <Text style={styles.infoText}>Currency Symbol: {symbol}</Text>}
 
+               <TouchableOpacity onPress={toggleTheme} style={styles.iconToggle}>
+  <FontAwesome
+    name={theme === 'light' ? 'moon-o' : 'sun-o'}
+    size={26}
+    color={theme === 'light' ? '#111' : '#ff6906ff'}
+  />
+</TouchableOpacity>
+<Text style={{ fontSize: 12, marginTop: 4, color: selectedTheme.text }}>
+{theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+</Text>
+
+
       <View style={styles.themeToggleContainer}>
         <Text style={styles.infoText}>Current Theme: {theme === 'light' ? 'Light' : 'Dark'}</Text>
-        <Button
-          mode="outlined"
-          onPress={toggleTheme}
-          style={styles.toggleButton}
-          labelStyle={{ fontSize: 15, fontWeight: '600', color: '#2196F3' }}
-        >
-          Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
-        </Button>
-        <Text style={styles.infoText}>Bank Acronym</Text>
+ 
+       
 <TextInput
   style={styles.acronymInput}
   placeholder="Enter new acronym (e.g., RGL)"
@@ -220,7 +228,7 @@ const SettingsScreen = () => {
   value={newAcronym}
   onChangeText={setNewAcronym}
 />
-
+ <Text style={styles.infoText}>Bank Acronym</Text>
       </View>
 
       <Button
@@ -395,6 +403,15 @@ const styles = StyleSheet.create({
   color: '#111827',
   backgroundColor: '#FFFFFF',
   marginBottom: 20,
+},
+iconToggle: {
+  marginTop: 10,
+  padding: 10,
+  borderRadius: 50,
+  backgroundColor: '#E5E7EB',
+  alignItems: 'center',
+  justifyContent: 'center',
+  alignSelf: 'flex-start',
 },
 
 });

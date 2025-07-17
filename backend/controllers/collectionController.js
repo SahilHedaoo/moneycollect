@@ -19,7 +19,7 @@ exports.addCollection = (req, res) => {
 exports.getTotalAmountByUser = (req, res) => {
   const { user_id } = req.params;
   db.query(
-    'SELECT SUM(amount) AS total FROM collections WHERE user_id = ?',
+    'SELECT SUM(amount) AS total FROM collections WHERE user_id = ? AND is_deleted = FALSE',
     [user_id],
     (err, results) => {
       if (err) return res.status(500).json({ error: err });
@@ -32,7 +32,7 @@ exports.getCollectionsByUser = (req, res) => {
   const { user_id } = req.params;
   const { start, end } = req.query;
 
-  let query = 'SELECT * FROM collections WHERE user_id = ?';
+  let query = 'SELECT * FROM collections WHERE user_id = ? AND is_deleted = FALSE';
   let params = [user_id];
 
   if (start && end) {
@@ -60,24 +60,24 @@ exports.getSummaryByBank = (req, res) => {
     const queries = {
       today: `SELECT SUM(c.amount) as total FROM collections c 
               JOIN users u ON c.user_id = u.id 
-              WHERE u.bank_id = ? AND DATE(c.collected_at) = CURDATE()`,
+              WHERE u.bank_id = ? AND DATE(c.collected_at) = CURDATE() AND c.is_deleted = FALSE`,
 
       yesterday: `SELECT SUM(c.amount) as total FROM collections c 
                   JOIN users u ON c.user_id = u.id 
-                  WHERE u.bank_id = ? AND DATE(c.collected_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)`,
+                  WHERE u.bank_id = ? AND DATE(c.collected_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND c.is_deleted = FALSE`,
 
       week: `SELECT SUM(c.amount) as total FROM collections c 
              JOIN users u ON c.user_id = u.id 
-             WHERE u.bank_id = ? AND YEARWEEK(c.collected_at, 1) = YEARWEEK(CURDATE(), 1)`,
+             WHERE u.bank_id = ? AND YEARWEEK(c.collected_at, 1) = YEARWEEK(CURDATE(), 1) AND c.is_deleted = FALSE`,
 
       month: `SELECT SUM(c.amount) as total FROM collections c 
               JOIN users u ON c.user_id = u.id 
               WHERE u.bank_id = ? AND MONTH(c.collected_at) = MONTH(CURDATE()) 
-              AND YEAR(c.collected_at) = YEAR(CURDATE())`,
+              AND YEAR(c.collected_at) = YEAR(CURDATE()) AND c.is_deleted = FALSE`,
 
       year: `SELECT SUM(c.amount) as total FROM collections c 
              JOIN users u ON c.user_id = u.id 
-             WHERE u.bank_id = ? AND YEAR(c.collected_at) = YEAR(CURDATE())`,
+             WHERE u.bank_id = ? AND YEAR(c.collected_at) = YEAR(CURDATE()) AND c.is_deleted = FALSE`,
     };
 
     const summary = {};
@@ -135,7 +135,7 @@ exports.getFilteredCollections = (req, res) => {
     SELECT u.first_name, u.last_name, c.amount, DATE(c.created_at) as date
     FROM collections c
     JOIN users u ON c.user_id = u.id
-    WHERE ${dateCondition} AND u.bank_id = ?
+    WHERE ${dateCondition} AND u.bank_id = ? AND c.is_deleted = FALSE
     ORDER BY c.created_at DESC
   `;
 
@@ -146,7 +146,7 @@ exports.getFilteredCollections = (req, res) => {
 };
 
 exports.getUser = (req, res) => {
-  let query = 'SELECT * FROM users WHERE user_id = ?';
+  let query = 'SELECT * FROM users WHERE user_id = ? AND is_deleted = FALSE';
 
   db.query(query, params, (err, results) => {
     if (err) return res.status(500).json({ error: err });
@@ -166,7 +166,7 @@ exports.getCollections = (req, res) => {
       SELECT c.*, u.first_name, u.last_name 
       FROM collections c 
       JOIN users u ON c.user_id = u.id 
-      WHERE u.bank_id = ? 
+      WHERE u.bank_id = ? AND c.is_deleted = FALSE
       ORDER BY c.collected_at DESC
     `;
 
@@ -194,7 +194,7 @@ exports.getCollectionsByDateRange = (req, res) => {
       SELECT c.*, u.first_name, u.last_name 
       FROM collections c
       JOIN users u ON c.user_id = u.id
-      WHERE u.bank_id = ? AND DATE(c.collected_at) BETWEEN ? AND ?
+      WHERE u.bank_id = ? AND DATE(c.collected_at) BETWEEN ? AND ? AND c.is_deleted = FALSE
       ORDER BY c.collected_at DESC
     `;
 
@@ -229,7 +229,7 @@ exports.getTopUsers = (req, res) => {
       SELECT u.first_name, u.last_name, SUM(c.amount) AS total
       FROM collections c
       JOIN users u ON c.user_id = u.id
-      WHERE u.bank_id = ?
+      WHERE u.bank_id = ? AND c.is_deleted = FALSE  
       GROUP BY c.user_id
       ORDER BY total DESC
       LIMIT 10
@@ -285,4 +285,68 @@ exports.addBulkCollections = (req, res) => {
 
     res.status(201).json({ message: '✅ Bulk collections added successfully' });
   });
+};
+
+exports.deleteCollection = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Token missing' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
+    const { collectionId } = req.params;
+
+    // Delete only if the collection belongs to the same bank
+    const query = `
+      UPDATE collections c 
+  JOIN users u ON c.user_id = u.id 
+  SET c.is_deleted = TRUE 
+  WHERE c.id = ? AND u.bank_id = ?
+    `;
+
+    db.query(query, [collectionId, bankId], (err, result) => {
+      if (err) {
+        console.error('Delete Error:', err);
+        return res.status(500).json({ error: 'Failed to delete collection' });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Collection not found or unauthorized' });
+      }
+
+      res.status(200).json({ message: 'Collection deleted successfully' });
+    });
+  } catch (err) {
+    console.error('Token Error:', err);
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+};
+
+// ✅ backend/controllers/collectionController.js (add at bottom)
+exports.restoreCollection = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Token missing' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const bankId = decoded.bankId;
+    const { collectionId } = req.params;
+
+    const query = `
+      UPDATE collections c 
+      JOIN users u ON c.user_id = u.id 
+      SET c.is_deleted = FALSE
+      WHERE c.id = ? AND u.bank_id = ?`;
+
+    db.query(query, [collectionId, bankId], (err, result) => {
+      if (err) return res.status(500).json({ error: err });
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'Collection not found or unauthorized' });
+      }
+
+      res.status(200).json({ message: 'Collection restored successfully' });
+    });
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
 };
