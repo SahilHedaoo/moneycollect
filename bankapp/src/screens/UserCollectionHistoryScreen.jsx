@@ -119,7 +119,7 @@ const confirmDelete = (id) => {
 
   return (
     <View style={[styles.container, { backgroundColor: selectedTheme.background }]}>
-      <ScrollView contentContainerStyle={[styles.subcontainer, { backgroundColor: selectedTheme.background }]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.subcontainer, { backgroundColor: selectedTheme.background }]}>
         <Text style={[styles.title, { color: selectedTheme.text }]}>{userName}'s Collection History</Text>
 
         <View style={styles.filterRow}>

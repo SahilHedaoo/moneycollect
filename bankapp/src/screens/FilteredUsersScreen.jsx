@@ -12,12 +12,13 @@ import api from '../services/api';
 import Toast from 'react-native-toast-message';
 import { ThemeContext } from '../context/themeContext';
 import { lightTheme, darkTheme } from '../styles/themes';
+import { SettingsContext } from '../context/SettingsContext';
 
 const FilteredUsersScreen = ({ route, navigation }) => {
   const { amount, package: packageType, matchMode } = route.params;
+  const { currency, symbol } = useContext(SettingsContext);
   const { theme } = useContext(ThemeContext);
   const currentTheme = theme === 'light' ? lightTheme : darkTheme;
-
   const [users, setUsers] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -48,7 +49,6 @@ const FilteredUsersScreen = ({ route, navigation }) => {
           return matchesAmount || matchesType;
         });
       }
-
       setUsers(filtered);
     } catch (error) {
       console.error('Error:', error);
@@ -80,7 +80,6 @@ const FilteredUsersScreen = ({ route, navigation }) => {
       Toast.show({ type: 'error', text1: 'Select at least one user' });
       return;
     }
-
     try {
       const token = await AsyncStorage.getItem('token');
       const collections = selectedUserIds.map((user_id) => {
@@ -91,11 +90,9 @@ const FilteredUsersScreen = ({ route, navigation }) => {
           frequency: user.package_name,
         };
       });
-
       await api.post('/collections/bulk', { collections }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       Toast.show({ type: 'success', text1: 'Collection submitted' });
       navigation.goBack();
     } catch (error) {
@@ -110,11 +107,11 @@ const FilteredUsersScreen = ({ route, navigation }) => {
 
   const filterTag = () => {
     if (matchMode === 'and') {
-      return `Matching: ₹${amount} AND ${packageType}`;
+      return `Matching:   ${symbol} ${amount}  AND   ${packageType}`;
     } else if (amount && packageType) {
-      return `Matching: ₹${amount} OR ${packageType}`;
+      return `Matching: ${symbol}${amount} OR ${packageType}`;
     } else if (amount) {
-      return `Matching: ₹${amount}`;
+      return `Matching: ${symbol}${amount}`;
     } else if (packageType) {
       return `Matching: ${packageType}`;
     } else {
@@ -146,26 +143,31 @@ const FilteredUsersScreen = ({ route, navigation }) => {
                   color={currentTheme.primary}
                 />
                 <Text style={{ color: currentTheme.text }}>
-                  {item.first_name} {item.last_name} – ₹{item.package_amount} ({item.package_name})
+                  {item.first_name} {item.last_name} – {symbol}{item.package_amount} ({item.package_name})
                 </Text>
               </View>
             )}
-          />
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
 
-          <Text style={{ color: currentTheme.text, fontWeight: 'bold' }}>
-            Selected Users: {selectedUserIds.length}
-          </Text>
-          <Text style={{ color: currentTheme.text, fontWeight: 'bold' }}>
-            Total Amount: ₹{totalAmount.toFixed(2)}
-          </Text>
-          <Button
-            mode="contained"
-            onPress={handleSubmit}
-            style={styles.button}
-            labelStyle={{ fontSize: 16, fontWeight: 'bold', color: 'white' }}
-          >
-            Submit ₹{totalAmount.toFixed(2)}
-          </Button>
+            ListFooterComponent={
+              <View style={{ marginTop: 10 }}>
+                <Text style={{ color: currentTheme.text, fontWeight: 'bold' }}>
+                  Selected Users: {selectedUserIds.length}
+                </Text>
+                <Text style={{ color: currentTheme.text, fontWeight: 'bold' }}>
+                  Total Amount: {symbol}{totalAmount.toFixed(2)}
+                </Text>
+                <Button
+                  mode="contained"
+                  onPress={handleSubmit}
+                  style={styles.button}
+                  labelStyle={{ fontSize: 16, fontWeight: 'bold', color: 'white' }}
+                >
+                  Submit {symbol}{totalAmount.toFixed(2)}
+                </Button>
+              </View>}
+          />
         </>
       )}
 
@@ -173,7 +175,6 @@ const FilteredUsersScreen = ({ route, navigation }) => {
       {!loading && users.length > 0 && (
         <FAB
           icon={selectedUserIds.length === users.length ? 'close' : 'check'}
-          label={selectedUserIds.length === users.length ? '' : ''}
           onPress={toggleSelectAll}
           style={[styles.fab, { backgroundColor: currentTheme.primary }]}
           color="#fff"
@@ -181,6 +182,7 @@ const FilteredUsersScreen = ({ route, navigation }) => {
       )}
     </View>
   );
+
 };
 
 const styles = StyleSheet.create({
@@ -193,7 +195,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 20,
     borderRadius: 8,
-    backgroundColor: '#2196F3', 
+    backgroundColor: '#2196F3',
   },
   header: {
     fontSize: 18,

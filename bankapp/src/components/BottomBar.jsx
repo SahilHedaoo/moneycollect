@@ -35,6 +35,34 @@ export default function BottomBar({ title, navigation, route }) {
       </Pressable>
 
       <Pressable
+        onPress={() => navigation.navigate('UserList')}
+        style={{ alignItems: 'center' }}
+      >
+        <MaterialCommunityIcons
+          name="account-multiple"
+          color={title === 'User List' ? '#fff' : '#b6dcfb'}
+          size={25}
+        />
+        <Text style={{ color: title === 'User List' ? '#fff' : '#b6dcfb' }}>
+          Users
+        </Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => navigation.navigate('BankProfile')}
+        style={{ alignItems: 'center' }}
+      >
+        <MaterialCommunityIcons
+          name="bank"
+          color={title === 'Bank Profile' ? '#fff' : '#b6dcfb'}
+          size={25}
+        />
+        <Text style={{ color: title === 'Bank Profile' ? '#fff' : '#b6dcfb' }}>
+          Account
+        </Text>
+      </Pressable>
+
+      <Pressable
         onPress={() => navigation.navigate('Settings')}
         style={{ alignItems: 'center' }}
       >

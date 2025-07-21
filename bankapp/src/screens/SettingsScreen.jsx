@@ -6,6 +6,8 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
   Modal,
 } from 'react-native';
 import { CountryPicker } from 'react-native-country-codes-picker';
@@ -135,113 +137,367 @@ const SettingsScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: selectedTheme.background }]}>
-      <Text style={[styles.title, { color: selectedTheme.text }]}>Settings</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={80}
+    >
+      <ScrollView
+        style={[{ flex: 1, backgroundColor: selectedTheme.background }]}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={[styles.title, { color: selectedTheme.text }]}>Settings</Text>
 
-      <TouchableOpacity onPress={() => setShowCountryPicker(true)} style={styles.selectBox}>
-        <Text style={styles.selectText}>
-          {country?.name?.en ? `Country: ${country.name.en}` : 'Select Country'}
-        </Text>
-      </TouchableOpacity>
+        {/* All your content below stays as-is */}
+        <TouchableOpacity onPress={() => setShowCountryPicker(true)} style={styles.selectBox}>
+          <Text style={styles.selectText}>
+            {country?.name?.en ? `Country: ${country.name.en}` : 'Select Country'}
+          </Text>
+        </TouchableOpacity>
 
-      <CountryPicker
-        show={showCountryPicker}
-        pickerButtonOnPress={handleCountrySelect}
-        onBackdropPress={() => setShowCountryPicker(false)}
-        lang="en"
-        style={{ modal: { height: '75%' } }}
-      />
+        <CountryPicker
+          show={showCountryPicker}
+          pickerButtonOnPress={handleCountrySelect}
+          onBackdropPress={() => setShowCountryPicker(false)}
+          lang="en"
+          style={{ modal: { height: '75%' } }}
+        />
 
-      {country && (
-        <Text style={styles.infoText}>
-          Selected: {country.name.en} ({country.dial_code})
-        </Text>
-      )}
+        {country && (
+          <Text style={styles.infoText}>
+            Selected: {country.name.en} ({country.dial_code})
+          </Text>
+        )}
 
-      <TouchableOpacity onPress={() => setShowCurrencySearch(true)} style={styles.selectBox}>
-        <Text style={styles.selectText}>
-          {currency ? `Currency: ${currency} (${symbol})` : 'Select Currency'}
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowCurrencySearch(true)} style={styles.selectBox}>
+          <Text style={styles.selectText}>
+            {currency ? `Currency: ${currency} (${symbol})` : 'Select Currency'}
+          </Text>
+        </TouchableOpacity>
 
-      <Modal visible={showCurrencySearch} animationType="slide" transparent>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.currencyModal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Currency</Text>
-              <TouchableOpacity onPress={() => setShowCurrencySearch(false)}>
-                <Text style={styles.closeIcon}>✕</Text>
-              </TouchableOpacity>
-            </View>
+        <Modal visible={showCurrencySearch} animationType="slide" transparent>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.currencyModal}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Currency</Text>
+                <TouchableOpacity onPress={() => setShowCurrencySearch(false)}>
+                  <Text style={styles.closeIcon}>✕</Text>
+                </TouchableOpacity>
+              </View>
 
-            <View style={styles.searchWrapper}>
-              <Text style={styles.searchIcon}>🔍</Text>
-              <TextInput
-                placeholder="Search currencies..."
-                value={currencySearch}
-                onChangeText={onSearchCurrency}
-                style={styles.searchInput}
-                placeholderTextColor="#999"
+              <View style={styles.searchWrapper}>
+                <Text style={styles.searchIcon}>🔍</Text>
+                <TextInput
+                  placeholder="Search currencies..."
+                  value={currencySearch}
+                  onChangeText={onSearchCurrency}
+                  style={styles.searchInput}
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <FlatList
+                data={filteredCurrencies}
+                keyExtractor={(item) => item.code}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={styles.dropdownItem} onPress={() => handleCurrencySelect(item)}>
+                    <Text style={styles.currencySymbol}>{item.symbol}</Text>
+                    <View>
+                      <Text style={styles.dropdownText}>{item.code}</Text>
+                      <Text style={styles.currencyName}>{item.currency}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                keyboardShouldPersistTaps="handled"
               />
             </View>
-
-            <FlatList
-              data={filteredCurrencies}
-              keyExtractor={(item) => item.code}
-              renderItem={({ item }) => (
-                <TouchableOpacity style={styles.dropdownItem} onPress={() => handleCurrencySelect(item)}>
-                  <Text style={styles.currencySymbol}>{item.symbol}</Text>
-                  <View>
-                    <Text style={styles.dropdownText}>{item.code}</Text>
-                    <Text style={styles.currencyName}>{item.currency}</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-              keyboardShouldPersistTaps="handled"
-            />
           </View>
+        </Modal>
+
+        {symbol !== '' && <Text style={styles.infoText}>Currency Symbol: {symbol}</Text>}
+
+        <TouchableOpacity onPress={toggleTheme} style={styles.iconToggle}>
+          <FontAwesome
+            name={theme === 'light' ? 'moon-o' : 'sun-o'}
+            size={26}
+            color={theme === 'light' ? '#111' : '#ff6906ff'}
+          />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 12, marginTop: 4, color: selectedTheme.text }}>
+          {theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+        </Text>
+
+        <View style={styles.themeToggleContainer}>
+          <Text style={styles.infoText}>Current Theme: {theme === 'light' ? 'Light' : 'Dark'}</Text>
+          <TextInput
+            style={styles.acronymInput}
+            placeholder="Enter new acronym (e.g., RGL)"
+            placeholderTextColor="#999"
+            value={newAcronym}
+            onChangeText={setNewAcronym}
+          />
+          <Text style={styles.infoText}>Bank Acronym</Text>
         </View>
-      </Modal>
 
-      {symbol !== '' && <Text style={styles.infoText}>Currency Symbol: {symbol}</Text>}
-
-               <TouchableOpacity onPress={toggleTheme} style={styles.iconToggle}>
-  <FontAwesome
-    name={theme === 'light' ? 'moon-o' : 'sun-o'}
-    size={26}
-    color={theme === 'light' ? '#111' : '#ff6906ff'}
-  />
-</TouchableOpacity>
-<Text style={{ fontSize: 12, marginTop: 4, color: selectedTheme.text }}>
-{theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-</Text>
-
-
-      <View style={styles.themeToggleContainer}>
-        <Text style={styles.infoText}>Current Theme: {theme === 'light' ? 'Light' : 'Dark'}</Text>
- 
-       
-<TextInput
-  style={styles.acronymInput}
-  placeholder="Enter new acronym (e.g., RGL)"
-  placeholderTextColor="#999"
-  value={newAcronym}
-  onChangeText={setNewAcronym}
-/>
- <Text style={styles.infoText}>Bank Acronym</Text>
-      </View>
-
-      <Button
-        mode="contained"
-        onPress={handleSave}
-        style={styles.button}
-        labelStyle={{ fontSize: 15, fontWeight: '600', color: '#fff' }}
-      >
-        Save
-      </Button>
-    </View>
+        <Button
+          mode="contained"
+          onPress={handleSave}
+          style={styles.button}
+          labelStyle={{ fontSize: 15, fontWeight: '600', color: '#fff' }}
+        >
+          Save
+        </Button>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
+
+// import React, { useEffect, useState, useContext } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   TextInput,
+//   FlatList,
+//   TouchableOpacity,
+//   Modal,
+// } from 'react-native';
+// import { CountryPicker } from 'react-native-country-codes-picker';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { Button } from 'react-native-paper';
+// import currencyCodes from 'currency-codes';
+// import getSymbolFromCurrency from 'currency-symbol-map';
+// import { SettingsContext } from '../context/SettingsContext';
+// import { ThemeContext } from '../context/themeContext';
+// import { showToast } from '../ui/toast';
+// import api from '../services/api';
+// import { lightTheme, darkTheme } from '../styles/themes';
+// import FontAwesome from 'react-native-vector-icons/FontAwesome';
+
+// // Feather has sun/moon icons
+
+// const SettingsScreen = () => {
+//   const { updateSettings, country: contextCountry } = useContext(SettingsContext);
+//   const { theme, toggleTheme } = useContext(ThemeContext);
+//   const [country, setCountry] = useState(null);
+//   const [currency, setCurrency] = useState('');
+//   const [symbol, setSymbol] = useState('');
+//   const [showCountryPicker, setShowCountryPicker] = useState(false);
+//   const [currencySearch, setCurrencySearch] = useState('');
+//   const [showCurrencySearch, setShowCurrencySearch] = useState(false);
+//   const [newAcronym, setNewAcronym] = useState('');
+
+
+//   const selectedTheme = theme === 'light' ? lightTheme : darkTheme;
+
+//   const currencies = currencyCodes
+//     .codes()
+//     .map((code) => {
+//       try {
+//         const data = currencyCodes.code(code);
+//         if (!data || !data.currency) return null;
+//         return {
+//           code,
+//           currency: data.currency,
+//           symbol: getSymbolFromCurrency(code) || '',
+//         };
+//       } catch (error) {
+//         return null;
+//       }
+//     })
+//     .filter(Boolean);
+
+//   const [filteredCurrencies, setFilteredCurrencies] = useState(currencies);
+
+//   useEffect(() => {
+//     const loadSettings = async () => {
+//       const savedCountry = await AsyncStorage.getItem('selectedCountry');
+//       const savedCurrency = await AsyncStorage.getItem('selectedCurrency');
+//       const savedSymbol = await AsyncStorage.getItem('selectedSymbol');
+
+//       if (savedCountry) setCountry(JSON.parse(savedCountry));
+//       if (savedCurrency) setCurrency(savedCurrency);
+//       if (savedSymbol) setSymbol(savedSymbol);
+//     };
+//     loadSettings();
+//   }, []);
+
+//   const handleCountrySelect = (item) => {
+//     setCountry(item);
+//     const entry = currencies.find((c) => c.code === item.code);
+//     if (entry) {
+//       setCurrency(entry.code);
+//       setSymbol(entry.symbol);
+//     } else {
+//       setCurrency('');
+//       setSymbol('');
+//     }
+//     setShowCountryPicker(false);
+//   };
+
+//  const handleSave = async () => {
+//   if (!country || !currency) {
+//     showToast('error', 'Please select both country and currency.');
+//     return;
+//   }
+
+//   const token = await AsyncStorage.getItem('token'); // moved outside
+//   try {
+//     await updateSettings(currency, symbol, country);
+
+//     await api.put(
+//       '/users/updateDialCode',
+//       { dial_code: country.dial_code },
+//       { headers: { Authorization: `Bearer ${token}` } }
+//     );
+
+//     showToast('success', `Country: ${country.name.en}\nCurrency: ${currency} ${symbol}`);
+//   } catch (e) {
+//     console.log('err', e);
+//     showToast('error', 'Failed to save settings.');
+//   }
+
+//   if (newAcronym.trim() !== '') {
+//     try {
+//       await api.put(
+//         '/banks/update-acronym',
+//         { newAcronym: newAcronym.trim().toUpperCase() },
+//         { headers: { Authorization: `Bearer ${token}` } }
+//       );
+//       showToast('success', `Bank acronym updated to: ${newAcronym.toUpperCase()}`);
+//     } catch (err) {
+//       console.log('Acronym update failed', err);
+//       showToast('error', 'Failed to update acronym.');
+//     }
+//   }
+// };
+
+//   const onSearchCurrency = (text) => {
+//     setCurrencySearch(text);
+//     const filtered = currencies.filter(
+//       (item) =>
+//         item.code.toLowerCase().includes(text.toLowerCase()) ||
+//         item.currency.toLowerCase().includes(text.toLowerCase())
+//     );
+//     setFilteredCurrencies(filtered);
+//   };
+
+//   const handleCurrencySelect = (item) => {
+//     setCurrency(item.code);
+//     setSymbol(item.symbol);
+//     setShowCurrencySearch(false);
+//   };
+
+//   return (
+//     <View style={[styles.container, { backgroundColor: selectedTheme.background }]}>
+//       <Text style={[styles.title, { color: selectedTheme.text }]}>Settings</Text>
+
+//       <TouchableOpacity onPress={() => setShowCountryPicker(true)} style={styles.selectBox}>
+//         <Text style={styles.selectText}>
+//           {country?.name?.en ? `Country: ${country.name.en}` : 'Select Country'}
+//         </Text>
+//       </TouchableOpacity>
+
+//       <CountryPicker
+//         show={showCountryPicker}
+//         pickerButtonOnPress={handleCountrySelect}
+//         onBackdropPress={() => setShowCountryPicker(false)}
+//         lang="en"
+//         style={{ modal: { height: '75%' } }}
+//       />
+
+//       {country && (
+//         <Text style={styles.infoText}>
+//           Selected: {country.name.en} ({country.dial_code})
+//         </Text>
+//       )}
+
+//       <TouchableOpacity onPress={() => setShowCurrencySearch(true)} style={styles.selectBox}>
+//         <Text style={styles.selectText}>
+//           {currency ? `Currency: ${currency} (${symbol})` : 'Select Currency'}
+//         </Text>
+//       </TouchableOpacity>
+
+//       <Modal visible={showCurrencySearch} animationType="slide" transparent>
+//         <View style={styles.modalBackdrop}>
+//           <View style={styles.currencyModal}>
+//             <View style={styles.modalHeader}>
+//               <Text style={styles.modalTitle}>Select Currency</Text>
+//               <TouchableOpacity onPress={() => setShowCurrencySearch(false)}>
+//                 <Text style={styles.closeIcon}>✕</Text>
+//               </TouchableOpacity>
+//             </View>
+
+//             <View style={styles.searchWrapper}>
+//               <Text style={styles.searchIcon}>🔍</Text>
+//               <TextInput
+//                 placeholder="Search currencies..."
+//                 value={currencySearch}
+//                 onChangeText={onSearchCurrency}
+//                 style={styles.searchInput}
+//                 placeholderTextColor="#999"
+//               />
+//             </View>
+
+//             <FlatList
+//               data={filteredCurrencies}
+//               keyExtractor={(item) => item.code}
+//               renderItem={({ item }) => (
+//                 <TouchableOpacity style={styles.dropdownItem} onPress={() => handleCurrencySelect(item)}>
+//                   <Text style={styles.currencySymbol}>{item.symbol}</Text>
+//                   <View>
+//                     <Text style={styles.dropdownText}>{item.code}</Text>
+//                     <Text style={styles.currencyName}>{item.currency}</Text>
+//                   </View>
+//                 </TouchableOpacity>
+//               )}
+//               keyboardShouldPersistTaps="handled"
+//             />
+//           </View>
+//         </View>
+//       </Modal>
+
+//       {symbol !== '' && <Text style={styles.infoText}>Currency Symbol: {symbol}</Text>}
+
+//                <TouchableOpacity onPress={toggleTheme} style={styles.iconToggle}>
+//   <FontAwesome
+//     name={theme === 'light' ? 'moon-o' : 'sun-o'}
+//     size={26}
+//     color={theme === 'light' ? '#111' : '#ff6906ff'}
+//   />
+// </TouchableOpacity>
+// <Text style={{ fontSize: 12, marginTop: 4, color: selectedTheme.text }}>
+// {theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+// </Text>
+
+
+//       <View style={styles.themeToggleContainer}>
+//         <Text style={styles.infoText}>Current Theme: {theme === 'light' ? 'Light' : 'Dark'}</Text>
+ 
+       
+// <TextInput
+//   style={styles.acronymInput}
+//   placeholder="Enter new acronym (e.g., RGL)"
+//   placeholderTextColor="#999"
+//   value={newAcronym}
+//   onChangeText={setNewAcronym}
+// />
+//  <Text style={styles.infoText}>Bank Acronym</Text>
+//       </View>
+
+//       <Button
+//         mode="contained"
+//         onPress={handleSave}
+//         style={styles.button}
+//         labelStyle={{ fontSize: 15, fontWeight: '600', color: '#fff' }}
+//       >
+//         Save
+//       </Button>
+//     </View>
+//   );
+// };
 
 const styles = StyleSheet.create({
   container: {

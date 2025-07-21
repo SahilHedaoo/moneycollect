@@ -172,17 +172,6 @@ const UserListScreen = () => {
         )}
       </View>
 
-      <TouchableOpacity style={styles.updateAllButton} onPress={handleBulkUpdate}>
-        <Text style={styles.updateAllButtonText}>Apply Dial Code to All Users</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-  style={[styles.updateAllButton, { backgroundColor: '#dc3545' }]}
-  onPress={() => navigation.navigate('TrashUser')}
->
-  <Text style={styles.updateAllButtonText}>View Deleted Users</Text>
-</TouchableOpacity>
-
-
       {loading ? (
         <ActivityIndicator size="large" color={selectedTheme.primary} style={{ marginTop: 20 }} />
       ) : (
@@ -191,6 +180,20 @@ const UserListScreen = () => {
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View>
+              <TouchableOpacity style={styles.updateAllButton} onPress={handleBulkUpdate}>
+        <Text style={styles.updateAllButtonText}>Apply Dial Code to All Users</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+  style={[styles.updateAllButton, { backgroundColor: '#dc3545' }]}
+  onPress={() => navigation.navigate('TrashUser')}
+>
+  <Text style={styles.updateAllButtonText}>View Deleted Users</Text>
+</TouchableOpacity>
+  </View>
+          }
         />
       )}
 

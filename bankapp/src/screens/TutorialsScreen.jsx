@@ -25,6 +25,7 @@ const TutorialsScreen = () => {
         data={videoList}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[styles.card, { backgroundColor: selectedTheme.card }]}

@@ -3,6 +3,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 
 const api = axios.create({
   baseURL: 'http://192.168.1.15:5000/api',
@@ -39,14 +40,11 @@ api.interceptors.response.use(
           })
         );
       }
-
-      Alert.alert('Session Expired', 'Please login again.');
+      Toast.show('Session Expired', 'Please login again.');
     }
-
     return Promise.reject(error);
   }
 );
-
 
 export const restoreUser = (userId) => {
   return api.put(`/users/restore/${userId}`, {}); // send empty JSON object

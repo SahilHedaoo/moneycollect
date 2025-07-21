@@ -3,7 +3,7 @@ import {
   View,
   StyleSheet,
   Platform,
-  useColorScheme,
+  useColorScheme,ScrollView 
 } from 'react-native';
 import { TextInput, Button, Text, Switch } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -12,15 +12,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
 import { ThemeContext } from '../context/themeContext';
 import { lightTheme, darkTheme } from '../styles/themes';
+import { SettingsContext } from '../context/SettingsContext';
 
 const ReturnMoneyScreen = ({ route }) => {
   const { user } = route.params;
   const { theme } = useContext(ThemeContext);
   const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
-
+  const {currency, symbol} = useContext(SettingsContext);
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
-  const [rate, setRate] = useState('5');
+  const [rate, setRate] = useState('10');
   const [result, setResult] = useState(null);
   const [isCompound, setIsCompound] = useState(false);
   const [compoundFreq, setCompoundFreq] = useState('daily');
@@ -50,11 +51,16 @@ const ReturnMoneyScreen = ({ route }) => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
+    <ScrollView
+  style={{ backgroundColor: currentTheme.background, flex: 1 }}
+  contentContainerStyle={styles.container}
+  keyboardShouldPersistTaps="handled"
+  showsVerticalScrollIndicator={false}
+>
       <Text variant="titleMedium" style={[styles.headerText, { color: currentTheme.text }]}>
         Return to {user.first_name} {user.last_name}
       </Text>
-
+      
       <TextInput
         label="Interest Rate (%)"
         value={rate}
@@ -138,18 +144,17 @@ const ReturnMoneyScreen = ({ route }) => {
 
       {result && (
         <View style={[styles.resultBox, { backgroundColor: currentTheme.card }]}>
-          <Text style={{ color: currentTheme.text }}>Principal: ₹{result.principal}</Text>
-          <Text style={{ color: currentTheme.text }}>Interest: ₹{result.interest}</Text>
-          <Text style={{ color: currentTheme.text }}>Total Returned: ₹{result.amount_returned}</Text>
+          <Text style={{ color: currentTheme.text }}>Principal: {symbol} {result.principal}</Text>
+          <Text style={{ color: currentTheme.text }}>Interest: {symbol} {result.interest}</Text>
+          <Text style={{ color: currentTheme.text }}>Total Returned: {symbol} {result.amount_returned}</Text>
           <Text style={{ color: currentTheme.text }}>Method: {result.compounding}</Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
-
 const styles = StyleSheet.create({
-  container: { padding: 20, flex: 1 },
+  container: { padding: 20},
   headerText: { marginBottom: 16, fontWeight: 'bold' },
   input: { marginBottom: 10 },
   dateButton: { marginTop: 10 },

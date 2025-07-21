@@ -22,12 +22,12 @@ import DateButton from '../components/DateButton';
 import { useContext } from 'react';
 import { ThemeContext } from '../context/themeContext';
 import { lightTheme, darkTheme } from '../styles/themes';
-
+import { SettingsContext } from '../context/SettingsContext';
 
 const ReportsScreen = () => {
   const { theme } = useContext(ThemeContext);
-const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
-
+  const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
+  const { currency, symbol } = useContext(SettingsContext);
   const navigation = useNavigation();
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -36,7 +36,6 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
   const [loading, setLoading] = useState(false);
   const [lastFilePath, setLastFilePath] = useState(null);
   const { width } = useWindowDimensions();
-
   const formatDate = (date) => date?.toISOString().split('T')[0];
 
   const downloadReport = async () => {
@@ -46,20 +45,16 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
         text1: 'Missing Dates',
         text2: 'Please select both start and end dates',
       });
-
       return;
     }
-
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem('token');
       const start = formatDate(startDate);
       const end = formatDate(endDate);
-
       const response = await api.get(`/collections/by-date?start=${start}&end=${end}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       const collections = response.data.data;
       const total = response.data.total;
 
@@ -69,10 +64,8 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
           text1: 'No Data',
           text2: 'No collections found for selected date range.',
         });
-
         return;
       }
-
       // Group by user
       const userMap = {};
       collections.forEach(item => {
@@ -88,11 +81,10 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
       });
 
       const groupedData = Object.values(userMap);
-
       // Excel data
       const wsData = [
         [`Selected Date Range: ${start} to ${end}`],
-        [`Total Amount Collected: ₹${total}`],
+        [`Total Amount Collected: ${symbol}${total}`],
         [],
         ['First Name', 'Last Name', 'Total Amount'],
         ...groupedData.map(user => [
@@ -106,7 +98,6 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       XLSX.utils.book_append_sheet(wb, ws, 'Report');
       const wbout = XLSX.write(wb, { type: 'binary', bookType: 'xlsx' });
-
       const filePath = `${RNFS.DownloadDirectoryPath}/report_${Date.now()}.xlsx`;
       await RNFS.writeFile(filePath, wbout, 'ascii');
       setLastFilePath(filePath);
@@ -116,7 +107,6 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
         text1: 'Report Saved',
         text2: 'Excel file saved successfully!',
       });
-
     } catch (err) {
       console.log('Download error:', err);
       Toast.show({
@@ -124,7 +114,6 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
         text1: 'Error',
         text2: 'Failed to generate report.',
       });
-
     } finally {
       setLoading(false);
     }
@@ -137,10 +126,8 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
         text1: 'No Report',
         text2: 'Please download the report first.',
       });
-
       return;
     }
-
     try {
       await Share.open({
         title: 'Collection Report',
@@ -156,41 +143,32 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
 
   return (
     <View style={{ flex: 1 }}>
-   <ScrollView contentContainerStyle={[styles.subcontainer, { backgroundColor: selectedTheme.background }]}>
-
-
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.subcontainer, { backgroundColor: selectedTheme.background }]}>
         <View style={styles.filterRow}>
           <DateButton
             date={startDate || new Date()}
             onPress={() => setShowStartPicker(true)}
             color="green"
           />
-
           <DateButton
             date={endDate || new Date()}
             onPress={() => setShowEndPicker(true)}
             color="red"
           />
-
-
           <TouchableOpacity
             style={[styles.button, styles.filterButton]}
             onPress={downloadReport}
             disabled={loading}
           >
-          <Text style={[styles.buttonText, { color: selectedTheme.text }]}>📥 Download</Text>
-
+            <Text style={[styles.buttonText, { color: selectedTheme.text }]}>📥 Download</Text>
           </TouchableOpacity>
-           <TouchableOpacity
-          style={[styles.button, styles.shareButton]}
-          onPress={shareReport}
-        >
-          <Text style={[styles.buttonText, { color: selectedTheme.text }]}>📤 Share Report</Text>
-
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.shareButton]}
+            onPress={shareReport}
+          >
+            <Text style={[styles.buttonText, { color: selectedTheme.text }]}>📤 Share Report</Text>
+          </TouchableOpacity>
         </View>
-
-       
 
         {showStartPicker && (
           <DateTimePicker
@@ -203,7 +181,6 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
             }}
           />
         )}
-
         {showEndPicker && (
           <DateTimePicker
             value={endDate || new Date()}
@@ -215,23 +192,20 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
             }}
           />
         )}
-
         {loading && (
-         <ActivityIndicator size="large" color={selectedTheme.primary} style={{ marginTop: 20 }} />
-
+          <ActivityIndicator size="large" color={selectedTheme.primary} style={{ marginTop: 20 }} />
         )}
       </ScrollView>
-     <FAB
-  style={[styles.fab, { backgroundColor: selectedTheme.primary }]}
-  icon="plus"
-  color={selectedTheme.text}
-  onPress={() => navigation.navigate('UserReport')}
-/>
 
+      <FAB
+        style={[styles.fab, { backgroundColor: selectedTheme.primary }]}
+        icon="plus"
+        color={selectedTheme.text}
+        onPress={() => navigation.navigate('UserReport')}
+      />
     </View>
   );
 };
-
 export default ReportsScreen;
 
 const styles = StyleSheet.create({
@@ -303,8 +277,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontWeight: 'bold',
-  fontSize: 14,
-  textAlign: 'center',
+    fontSize: 14,
+    textAlign: 'center',
   },
   fab: {
     position: 'absolute',

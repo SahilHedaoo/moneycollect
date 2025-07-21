@@ -17,11 +17,11 @@ import { useNavigation } from '@react-navigation/native';
 import { useContext } from 'react';
 import { ThemeContext } from '../context/themeContext';
 import { lightTheme, darkTheme } from '../styles/themes';
-
+import { SettingsContext } from '../context/SettingsContext';
 const CollectionReportScreen = () => {
   const { theme } = useContext(ThemeContext);
-const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
-
+  const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
+  const { currency, symbol } = useContext(SettingsContext);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -35,12 +35,9 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
   const fetchCollectionData = async () => {
     try {
       setLoading(true);
-
       const from = moment(startDate).format('YYYY-MM-DD');
       const to = moment(endDate).format('YYYY-MM-DD');
-
       const token = await AsyncStorage.getItem('token'); // assuming token is stored in AsyncStorage
-
       const res = await api.get(`/collections/by-date?start=${from}&end=${to}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -57,7 +54,7 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
       setLoading(false);
     }
   };
-  
+
   const renderItem = ({ item }) => (
     <View style={styles.itemCard}>
       <Text style={styles.value}>{moment(item.collected_at).format('MMM D, YYYY')}</Text>
@@ -67,7 +64,6 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
     </View>
   );
 
-
   const Header = () => (
     <View style={styles.headerContainer}>
       <View style={styles.datePickers}>
@@ -76,7 +72,6 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
           onPress={() => setShowStartPicker(true)}
           color="green"
         />
-
         <DateButton
           date={endDate}
           onPress={() => setShowEndPicker(true)}
@@ -95,7 +90,6 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
           }}
         />
       )}
-
       {showEndPicker && (
         <DateTimePicker
           value={endDate}
@@ -114,7 +108,7 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
 
       <View style={styles.totalCard}>
         <Text style={styles.totalText}>Total Collection:</Text>
-        <Text style={styles.totalAmount}>₹{total.toFixed(2)}</Text>
+        <Text style={styles.totalAmount}>{symbol}{total.toFixed(2)}</Text>
       </View>
 
       {loading && <ActivityIndicator size="large" color="#fff" style={{ marginTop: 10 }} />}
@@ -122,12 +116,12 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
   );
 
   return (
-   <View style={[styles.container, { backgroundColor: selectedTheme.background }]}>
-
+    <View style={[styles.container, { backgroundColor: selectedTheme.background }]}>
       <FlatList
         data={collections}
         keyExtractor={(item, index) => index.toString()}
         renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={() => (
           <>
             <Header />
@@ -141,11 +135,9 @@ const selectedTheme = theme === 'dark' ? darkTheme : lightTheme;
         )}
         contentContainerStyle={styles.contentContainer}
       />
-
     </View>
   );
 };
-
 export default CollectionReportScreen;
 
 const styles = StyleSheet.create({
@@ -230,6 +222,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
-
-
 });

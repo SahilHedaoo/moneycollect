@@ -67,7 +67,7 @@ const TrashUserScreen = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
       {deletedUsers.length === 0 ? (
         <Text style={styles.emptyText}>No deleted users</Text>
       ) : (

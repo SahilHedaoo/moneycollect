@@ -117,7 +117,7 @@ const EditUserScreen = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.subcontainer}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.subcontainer}>
         <TextInput
           style={styles.input}
           placeholder="First Name *"
