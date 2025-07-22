@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addUser, getUsers, deleteUser,updateUser, updateDialCode, restoreUser, getDeletedUsers } = require('../controllers/userController');
+const { addUser, getUsers, deleteUser,updateUser, updateDialCode, restoreUser, getDeletedUsers, getAccessTokenByUserId } = require('../controllers/userController');
 
 router.post('/', addUser);         // POST /api/users
 router.get('/', getUsers);         // GET /api/users
@@ -18,5 +18,6 @@ router.put(
 );
 
 router.get('/deleted', getDeletedUsers); // 👈 Add this
+router.get('/access-token', getAccessTokenByUserId);
 
 module.exports = router;

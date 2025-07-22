@@ -350,3 +350,50 @@ exports.restoreCollection = (req, res) => {
     return res.status(403).json({ error: 'Invalid token' });
   }
 };
+
+
+exports.getPublicUserCollections = (req, res) => {
+  const { access_token } = req.params;
+
+  // Step 1: Find the user with the token
+  const userQuery = `
+    SELECT id, first_name, last_name, package_amount
+    FROM users
+    WHERE access_token = ?
+  `;
+
+  db.query(userQuery, [access_token], (err, userResult) => {
+    if (err || userResult.length === 0) {
+      return res.status(404).json({ error: 'Invalid or expired link' });
+    }
+
+    const user = userResult[0];
+
+    // Step 2: Get all collections for that user
+    const collectionQuery = `
+      SELECT collected_at, amount, frequency
+      FROM collections
+      WHERE user_id = ?
+    `;
+
+    db.query(collectionQuery, [user.id], (err, collections) => {
+      if (err) {
+        return res.status(500).json({ error: 'Failed to fetch collections' });
+      }
+
+      // Step 3: Calculate total collected amount
+      const totalCollected = collections.reduce((sum, entry) => sum + entry.amount, 0);
+
+      // Step 4: Return full response
+      res.json({
+        user: {
+          id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          package_amount: user.package_amount,
+          total_collected: totalCollected
+        },
+        collections
+      });
+    });
+  });
+};
