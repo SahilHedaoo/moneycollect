@@ -7,7 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   useWindowDimensions,
-  Alert 
+  Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../services/api';
@@ -19,7 +19,9 @@ import { lightTheme, darkTheme } from '../styles/themes';
 import { showToast } from '../ui/toast';
 import DateButton from '../components/DateButton';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
+import { Button } from 'react-native-paper';
+import Clipboard from '@react-native-clipboard/clipboard';
+import Toast from 'react-native-toast-message';
 const UserCollectionHistoryScreen = () => {
   const { currency, symbol } = useContext(SettingsContext);
   const { theme } = useContext(ThemeContext);
@@ -35,6 +37,29 @@ const UserCollectionHistoryScreen = () => {
   const [endDate, setEndDate] = useState(null);
   const [showStart, setShowStart] = useState(false);
   const [showEnd, setShowEnd] = useState(false);
+  const [accessToken, setAccessToken] = useState(null);
+  useEffect(() => {
+    const fetchAccessToken = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const response = await api.get(`/users/access-token?user_id=${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAccessToken(response.data.access_token);
+      } catch (err) {
+        console.error(err);
+        showToast('error', 'Failed to fetch User Link');
+      }
+    };
+    fetchAccessToken();
+  }, [userId]);
+  const handleShareLink = () => {
+    if (!accessToken) return;
+
+    const publicLink = `http://localhost:5173/collections/${accessToken}`;
+    Clipboard.setString(publicLink);
+    Toast.show({ type: 'success', text1: 'Link copied to clipboard!' });
+  };
 
   const calculateTotal = (data) => {
     const total = data.reduce((sum, item) => sum + parseFloat(item.amount), 0);
@@ -77,43 +102,45 @@ const UserCollectionHistoryScreen = () => {
   };
 
   const handleDelete = async (id) => {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    await api.delete(`/collections/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    showToast('success', 'Collection deleted successfully');
-    fetchCollections(); // Refresh list
-  } catch (err) {
-    console.error(err);
-    showToast('error', 'Failed to delete collection');
-  }
-};
-const confirmDelete = (id) => {
-  Alert.alert(
-    'Delete Collection',
-    'Are you sure you want to delete this collection?',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => handleDelete(id) },
-    ]
-  );
-};
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await api.delete(`/collections/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      showToast('success', 'Collection deleted successfully');
+      fetchCollections(); // Refresh list
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Failed to delete collection');
+    }
+  };
+  const confirmDelete = (id) => {
+    Alert.alert(
+      'Delete Collection',
+      'Are you sure you want to delete this collection?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => handleDelete(id) },
+      ]
+    );
+  };
 
   const renderCollection = (item) => (
-    <View key={item.id} style={[styles.item, { backgroundColor: selectedTheme.card, borderColor: selectedTheme.text + '33',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center', }]}>
-          <View>
-      <Text style={[styles.amount, { color: selectedTheme.primary }]}>{symbol}{item.amount}</Text>
-      <Text style={[styles.frequency, { color: selectedTheme.text }]}>{item.frequency.toUpperCase()}</Text>
-      <Text style={[styles.date, { color: selectedTheme.text + '99' }]}>
-        {new Date(item.collected_at).toLocaleString()}
-      </Text></View>
+    <View key={item.id} style={[styles.item, {
+      backgroundColor: selectedTheme.card, borderColor: selectedTheme.text + '33',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }]}>
+      <View>
+        <Text style={[styles.amount, { color: selectedTheme.primary }]}>{symbol}{item.amount}</Text>
+        <Text style={[styles.frequency, { color: selectedTheme.text }]}>{item.frequency.toUpperCase()}</Text>
+        <Text style={[styles.date, { color: selectedTheme.text + '99' }]}>
+          {new Date(item.collected_at).toLocaleString()}
+        </Text></View>
       <TouchableOpacity onPress={() => confirmDelete(item.id)}>
-      <MaterialIcons name="delete" size={24} color="red" />
-    </TouchableOpacity>
+        <MaterialIcons name="delete" size={24} color="red" />
+      </TouchableOpacity>
     </View>
   );
 
@@ -136,6 +163,9 @@ const confirmDelete = (id) => {
           <TouchableOpacity style={[styles.button, styles.filterButton]} onPress={handleFilter}>
             <Text style={[styles.buttonText, { color: '#fff' }]}>🔍 Filter</Text>
           </TouchableOpacity>
+          <Button icon="link" mode="outlined" onPress={handleShareLink}>
+            Copy User Link
+          </Button>
         </View>
 
         {showStart && (

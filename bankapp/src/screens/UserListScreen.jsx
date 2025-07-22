@@ -126,7 +126,7 @@ const UserListScreen = () => {
   const renderItem = ({ item }) => (
     <View style={[styles.card, { backgroundColor: selectedTheme.card }]}>
       <Text style={[styles.name, { color: selectedTheme.text }]}>
-       {item.custom_user_id} {item.first_name} {item.last_name}
+        {item.custom_user_id} {item.first_name} {item.last_name}
       </Text>
 
       <View style={styles.actions}>
@@ -147,7 +147,7 @@ const UserListScreen = () => {
           <Icon name="trash" size={20} color="#ff4d4d" />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('ReturnMoney', { user: item})}>
+        <TouchableOpacity onPress={() => navigation.navigate('ReturnMoney', { user: item })}>
           <Icon name="undo" size={20} color={selectedTheme.primary} />
         </TouchableOpacity>
       </View>
@@ -184,15 +184,15 @@ const UserListScreen = () => {
           ListHeaderComponent={
             <View>
               <TouchableOpacity style={styles.updateAllButton} onPress={handleBulkUpdate}>
-        <Text style={styles.updateAllButtonText}>Apply Dial Code to All Users</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-  style={[styles.updateAllButton, { backgroundColor: '#dc3545' }]}
-  onPress={() => navigation.navigate('TrashUser')}
->
-  <Text style={styles.updateAllButtonText}>View Deleted Users</Text>
-</TouchableOpacity>
-  </View>
+                <Text style={styles.updateAllButtonText}>Apply Dial Code to All Users</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.updateAllButton, { backgroundColor: '#dc3545' }]}
+                onPress={() => navigation.navigate('TrashUser')}
+              >
+                <Text style={styles.updateAllButtonText}>View Deleted Users</Text>
+              </TouchableOpacity>
+            </View>
           }
         />
       )}

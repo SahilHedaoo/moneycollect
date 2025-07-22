@@ -200,7 +200,6 @@ const AuthNavigator = () => {
           </Wrapper>
         )}
       </Stack.Screen>
-
     </Stack.Navigator>
 
   );
